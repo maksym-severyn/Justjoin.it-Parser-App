@@ -1,0 +1,16 @@
+version: '3.9'
+
+services:
+
+  db:
+    image: mysql:8.0.28
+    container_name: mysql_justjoinitparser
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: superSecretRootPassword
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: superSecretPassword
+    ports:
+      - "3306:3306"
+
