@@ -33,9 +33,9 @@ public class CustomWebDriver {
     private ChromeOptions getChromeOptions() {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--remote-debugging-port=9222", "--ignore-certificate-errors");
-//        options.addArguments("--headless");
-//        options.addArguments("--disable-gpu");
-//        options.addArguments("--no-sandbox");
+        options.addArguments("--headless");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--no-sandbox");
         options.setLogLevel(ChromeDriverLogLevel.OFF);
         return options;
     }

@@ -11,6 +11,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString
 public class Skill {
 
     @Id
@@ -20,4 +21,5 @@ public class Skill {
     private String city;
     private String name;
     private String level;
+    private String offer;
 }
