@@ -5,25 +5,26 @@ import com.example.justjoinparser.webdriver.CustomWebDriver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverLogLevel;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.service.DriverService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -32,9 +33,26 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 class PageServiceReactiveImpl implements PageService {
 
-    @Value("${chrome.webdriver}")
-    private String driverPath;
+    private static final Map<String, String> DICTIONARY = Map.ofEntries(
+            Map.entry("rest", "REST"),
+            Map.entry("webservice", "WebServices"),
+            Map.entry("web services", "WebServices"),
+            Map.entry("microservice", "Microservices"),
+            Map.entry("angular", "Angular"),
+            Map.entry("html", "HTML"),
+            Map.entry("hibernate", "Hibernate"),
+            Map.entry("jpa", "Hibernate"),
+            Map.entry("amazon", "AWS"),
+            Map.entry("aws", "AWS"),
+            Map.entry("bazy danych", "SQL"),
+            Map.entry("database", "SQL"),
+            Map.entry("github", "Git"),
+            Map.entry("Gitlab", "Git"),
+            Map.entry("mongodb", "NoSQL"),
+            Map.entry("postresql", "PostgreSQL")
+    );
 
+    private static final int COUNT_OF_THREAD = 30;
     private static final String CITY = "wroclaw";
     private static final String POSITION_LEVEL = "mid";
 
@@ -90,9 +108,9 @@ class PageServiceReactiveImpl implements PageService {
         LocalDateTime start = LocalDateTime.now();
 
         log.info("Found count of hrefs: {}", hrefs.size());
-        ExecutorService threadPool = Executors.newFixedThreadPool(35);
+        ExecutorService threadPool = Executors.newFixedThreadPool(COUNT_OF_THREAD);
         Flux.fromIterable(hrefs)
-                .flatMap(href -> stringMono(href, threadPool))
+                .flatMap(href -> concurrencyParseAndSaveSkillsFromHref(href, threadPool))
                 .doOnComplete(() -> log.info("Process of parse skills took: {} seconds",
                         ChronoUnit.SECONDS.between(start, LocalDateTime.now())))
                 .subscribe();
@@ -100,100 +118,96 @@ class PageServiceReactiveImpl implements PageService {
         log.info("Main thread get finish");
     }
 
-    Mono<String> stringMono(String href, ExecutorService executorService) {
-        return Mono.fromCallable(() -> myNewOperation(href))
-                .subscribeOn(Schedulers.fromExecutorService(executorService));
+    Mono<Void> concurrencyParseAndSaveSkillsFromHref(String href, ExecutorService executorService) {
+        return Mono.fromRunnable(() -> parseAndSaveSkillsFromHref(href))
+                .subscribeOn(Schedulers.fromExecutorService(executorService))
+                .then();
     }
 
-    public String myNewOperation(String href) {
-        WebDriver myDriver = null;
-        try {
-            // options
-            System.setProperty("webdriver.chrome.driver", driverPath);
-            ChromeOptions options = new ChromeOptions();
-//            options.addArguments("--remote-debugging-port=9222");
-            options.addArguments("--ignore-certificate-errors");
-            options.addArguments("--headless");
-            options.addArguments("--disable-gpu");
-            options.addArguments("--no-sandbox");
-            options.setLogLevel(ChromeDriverLogLevel.OFF);
+    public void parseAndSaveSkillsFromHref(String href) {
+        Assert.notNull(href, "input cannot be null");
 
+        WebDriver myDriver = openPage(href);
 
-            DriverService.Builder<ChromeDriverService, ChromeDriverService.Builder> serviceBuilder = new ChromeDriverService.Builder();
-            ChromeDriverService chromeDriverService = serviceBuilder.build();
-            chromeDriverService.sendOutputTo(NullOutputStream.NULL_OUTPUT_STREAM);
-
-            myDriver = new ChromeDriver(chromeDriverService, options);
-
-//            myDriver = new ChromeDriver(options);
-            myDriver.get(href);
-
-            Sleeper.sleepExactly(4);
-            myDriver.manage().window().setSize(new Dimension(900, 900));
-        } catch (Exception e) {
-            log.error("Custom exception: cannot create ChromeDriver!", e.getMessage(), e);
-        }
-
-        // part of trying to get skills from page --- START
-        List<WebElement> elements = myDriver.findElements(By.className("css-1xm32e0"));
-        int counter = 1;
-        while(elements.isEmpty() && counter <= 10) {
-            log.warn("Try to rerun: {}/10 ...", counter);
-            Sleeper.sleepExactly(3);
-            elements = myDriver.findElements(By.className("css-1xm32e0"));
-            counter++;
-        }
-        if (elements.isEmpty()) {
-            log.error("Oops... No elements from offer: {}", href);
-        }
-        // part of trying to get skills from page --- END
+        List<WebElement> elements = getElementsFromPage(myDriver, "css-1xm32e0");
 
         log.info("Elements collection size is: {}, offer: {}", elements.size(), href);
-        List<Skill> skills = new ArrayList<>();
-        elements.forEach(webElement -> {
-            Skill mySkill = Skill.builder()
-                    .seniority(POSITION_LEVEL)
-                    .city(CITY)
-                    .name(webElement.findElement(By.xpath("./div[2]")).getText())
-                    .level(webElement.findElement(By.xpath("./div[3]")).getText())
-                    .offer(href)
-                    .build();
-            skills.add(mySkill);
-        });
+        List<Skill> skills = parseWebElementsIntoSkills(elements, href);
 
-        Map<String, String> dictionary = Map.ofEntries(
-                Map.entry("rest", "REST"),
-                Map.entry("webservice", "WebServices"),
-                Map.entry("web services", "WebServices"),
-                Map.entry("microservice", "Microservices"),
-                Map.entry("angular", "Angular"),
-                Map.entry("html", "HTML"),
-                Map.entry("hibernate", "Hibernate"),
-                Map.entry("jpa", "Hibernate"),
-                Map.entry("amazon", "AWS"),
-                Map.entry("aws", "AWS"),
-                Map.entry("bazy danych", "SQL"),
-                Map.entry("database", "SQL"),
-                Map.entry("github", "Git"),
-                Map.entry("Gitlab", "Git"),
-                Map.entry("mongodb", "NoSQL"),
-                Map.entry("postresql", "PostgreSQL")
+        myDriver.quit();
+        pageRepo.saveAll(
+                skills.stream()
+                        .map(this::compareAndSetSkillNameAccordingWithDictionary)
+                        .toList()
         );
-        List<Skill> updatedSkills = skills.stream()
-                .map(skill -> {
-                    String name = skill.getName().toLowerCase();
-                    for (Map.Entry<String, String> entry : dictionary.entrySet()) {
-                        if (name.contains(entry.getKey())) {
-                            skill.setName(entry.getValue());
-                            name = skill.getName().toLowerCase();
-                        }
-                    }
-                    return skill;
-                })
-                .toList();
-        pageRepo.saveAll(updatedSkills);
+    }
 
-        return "Success!";
+    private List<Skill> parseWebElementsIntoSkills(List<WebElement> elements, String pageUrl) {
+        return elements.stream()
+                .map(webElement -> Skill.builder()
+                        .seniority(POSITION_LEVEL)
+                        .city(CITY)
+                        .name(webElement.findElement(By.xpath("./div[2]")).getText())
+                        .level(webElement.findElement(By.xpath("./div[3]")).getText())
+                        .offer(pageUrl)
+                        .build())
+                .toList();
+    }
+
+    private Skill compareAndSetSkillNameAccordingWithDictionary(Skill skill) {
+        String name = skill.getName().toLowerCase();
+        for (Map.Entry<String, String> entry : DICTIONARY.entrySet()) {
+            if (name.contains(entry.getKey())) {
+                skill.setName(entry.getValue());
+                name = skill.getName().toLowerCase();
+            }
+        }
+        return skill;
+    }
+
+    private List<WebElement> getElementsFromPage(WebDriver openedPage, String elementClassName) {
+        List<WebElement> elements = openedPage.findElements(By.className(elementClassName));
+        int counter = 1;
+        while (elements.isEmpty() && ++counter <= 10) {
+            log.warn("Try to rerun: {}/10 ...", counter);
+            Sleeper.sleepExactly(2);
+            elements = openedPage.findElements(By.className(elementClassName));
+        }
+        if (elements.isEmpty()) {
+            log.error("Oops... No elements from page: {}", openedPage.getCurrentUrl());
+        }
+        return elements;
+    }
+
+    private WebDriver openPage(String href) {
+        try {
+            WebDriver myDriver = createNewWebDriver();
+            myDriver.get(href);
+            Sleeper.sleepExactly(4);
+            myDriver.manage().window().setSize(new Dimension(900, 900));
+            return myDriver;
+        } catch (Exception e) {
+            log.error("WebDriver initialization failed! WebDriver is null", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    private WebDriver createNewWebDriver() {
+        DriverService.Builder<ChromeDriverService, ChromeDriverService.Builder> serviceBuilder = new ChromeDriverService.Builder();
+        ChromeDriverService chromeDriverService = serviceBuilder.build();
+        chromeDriverService.sendOutputTo(NullOutputStream.NULL_OUTPUT_STREAM);
+        return new ChromeDriver(chromeDriverService, getAnotherOptions());
+    }
+
+    private ChromeOptions getAnotherOptions() {
+        ChromeOptions options = new ChromeOptions();
+//        options.addArguments("--remote-debugging-port=9222");
+        options.addArguments("--ignore-certificate-errors");
+        options.addArguments("--headless");
+        options.addArguments("--disable-gpu");
+        options.addArguments("--no-sandbox");
+        options.setLogLevel(ChromeDriverLogLevel.OFF);
+        return options;
     }
 
 
