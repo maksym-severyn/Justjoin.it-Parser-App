@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
 import org.openqa.selenium.*;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeDriverLogLevel;
 import org.openqa.selenium.chrome.ChromeDriverService;
@@ -21,10 +22,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -120,7 +118,8 @@ class PageServiceReactiveImpl implements PageService {
 
     Mono<Void> concurrencyParseAndSaveSkillsFromHref(String href, ExecutorService executorService) {
         return Mono.fromRunnable(() -> parseAndSaveSkillsFromHref(href))
-                .subscribeOn(Schedulers.fromExecutorService(executorService))
+//                .subscribeOn(Schedulers.fromExecutorService(executorService))
+                .subscribeOn(Schedulers.parallel())
                 .then();
     }
 
@@ -167,14 +166,9 @@ class PageServiceReactiveImpl implements PageService {
 
     private List<WebElement> getElementsFromPage(WebDriver openedPage, String elementClassName) {
         List<WebElement> elements = openedPage.findElements(By.className(elementClassName));
-        int counter = 1;
-        while (elements.isEmpty() && ++counter <= 10) {
-            log.warn("Try to rerun: {}/10 ...", counter);
-            Sleeper.sleepExactly(2);
+        while (elements.isEmpty()) {
+            Sleeper.sleep(100);
             elements = openedPage.findElements(By.className(elementClassName));
-        }
-        if (elements.isEmpty()) {
-            log.error("Oops... No elements from page: {}", openedPage.getCurrentUrl());
         }
         return elements;
     }
@@ -183,7 +177,7 @@ class PageServiceReactiveImpl implements PageService {
         try {
             WebDriver myDriver = createNewWebDriver();
             myDriver.get(href);
-            Sleeper.sleepExactly(4);
+//            Sleeper.sleepExactly(4);
             myDriver.manage().window().setSize(new Dimension(900, 900));
             return myDriver;
         } catch (Exception e) {
