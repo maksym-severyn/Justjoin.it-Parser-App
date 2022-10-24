@@ -2,6 +2,7 @@ package com.example.justjoinparser;
 
 import com.example.justjoinparser.repo.PageRepo;
 import com.example.justjoinparser.webdriver.CustomWebDriver;
+import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.output.NullOutputStream;
@@ -50,7 +51,7 @@ class PageServiceReactiveImpl implements PageService {
             Map.entry("postresql", "PostgreSQL")
     );
 
-    private static final int COUNT_OF_THREAD = 30;
+    private static final int COUNT_OF_THREAD = 20;
     private static final String CITY = "wroclaw";
     private static final String POSITION_LEVEL = "mid";
 
@@ -67,7 +68,7 @@ class PageServiceReactiveImpl implements PageService {
      */
     @EventListener(ApplicationReadyEvent.class)
     public void parsePage() {
-        WebDriver driver = getWebDriver("https://justjoin.it/" + CITY + "/java/" + POSITION_LEVEL);
+        WebDriver driver = getWebDriver("https://justjoin.it/" + CITY + "/java/" + POSITION_LEVEL, 4);
         driver.manage().window().setSize(new Dimension(900, 900));
         Set<String> hrefs = new HashSet<>();
 
@@ -98,6 +99,7 @@ class PageServiceReactiveImpl implements PageService {
                 Sleeper.sleep(220);
             }
             if (infiniteHrefProtectCounter >= 500) { //zmień na 200!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                log.warn("Infinite breaker activate!");
                 break;
             }
         }
@@ -108,25 +110,27 @@ class PageServiceReactiveImpl implements PageService {
         log.info("Found count of hrefs: {}", hrefs.size());
         ExecutorService threadPool = Executors.newFixedThreadPool(COUNT_OF_THREAD);
         Flux.fromIterable(hrefs)
-                .flatMap(href -> concurrencyParseAndSaveSkillsFromHref(href, threadPool))
-                .doOnComplete(() -> log.info("Process of parse skills took: {} seconds",
-                        ChronoUnit.SECONDS.between(start, LocalDateTime.now())))
+                .flatMap(href -> Mono.fromRunnable(() -> parseAndSaveSkillsFromHref(href))
+                        .subscribeOn(Schedulers.fromExecutorService(threadPool))
+//                        .subscribeOn(Schedulers.boundedElastic())
+//                        .subscribeOn(Schedulers.parallel())
+                        .then())
+                .doOnComplete(() -> {
+                    log.info("Process of parse skills took: {} seconds",
+                        ChronoUnit.SECONDS.between(start, LocalDateTime.now()));
+                })
                 .subscribe();
 
         log.info("Main thread get finish");
-    }
-
-    Mono<Void> concurrencyParseAndSaveSkillsFromHref(String href, ExecutorService executorService) {
-        return Mono.fromRunnable(() -> parseAndSaveSkillsFromHref(href))
-//                .subscribeOn(Schedulers.fromExecutorService(executorService))
-                .subscribeOn(Schedulers.parallel())
-                .then();
+        log.info("Core in machine: {}", Runtime.getRuntime().availableProcessors());
     }
 
     public void parseAndSaveSkillsFromHref(String href) {
         Assert.notNull(href, "input cannot be null");
 
-        WebDriver myDriver = openPage(href);
+        WebDriver myDriver = customWebDriver.getWebDriver();
+        myDriver.get(href);
+        myDriver.manage().window().setSize(new Dimension(900, 900));
 
         List<WebElement> elements = getElementsFromPage(myDriver, "css-1xm32e0");
 
@@ -134,6 +138,7 @@ class PageServiceReactiveImpl implements PageService {
         List<Skill> skills = parseWebElementsIntoSkills(elements, href);
 
         myDriver.quit();
+
         pageRepo.saveAll(
                 skills.stream()
                         .map(this::compareAndSetSkillNameAccordingWithDictionary)
@@ -167,7 +172,6 @@ class PageServiceReactiveImpl implements PageService {
     private List<WebElement> getElementsFromPage(WebDriver openedPage, String elementClassName) {
         List<WebElement> elements = openedPage.findElements(By.className(elementClassName));
         while (elements.isEmpty()) {
-            Sleeper.sleep(100);
             elements = openedPage.findElements(By.className(elementClassName));
         }
         return elements;
@@ -177,7 +181,6 @@ class PageServiceReactiveImpl implements PageService {
         try {
             WebDriver myDriver = createNewWebDriver();
             myDriver.get(href);
-//            Sleeper.sleepExactly(4);
             myDriver.manage().window().setSize(new Dimension(900, 900));
             return myDriver;
         } catch (Exception e) {
@@ -205,10 +208,12 @@ class PageServiceReactiveImpl implements PageService {
     }
 
 
-    private WebDriver getWebDriver(String url) {
+    private WebDriver getWebDriver(String url, @Nullable Integer sleepSec) {
         WebDriver driver = customWebDriver.getWebDriver();
         driver.get(url);
-        Sleeper.sleepExactly(4);
+        if (sleepSec != null) {
+            Sleeper.sleepExactly(sleepSec);
+        }
         return driver;
     }
 

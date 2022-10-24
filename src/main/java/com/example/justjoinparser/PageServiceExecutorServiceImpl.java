@@ -76,70 +76,33 @@ class PageServiceExecutorServiceImpl implements PageService {
             }
         }
 
-
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
-        LocalDateTime start = LocalDateTime.now();
-        ExecutorService executor = Executors.newFixedThreadPool(4);
-//        List<Skill> skills = new ArrayList<>();
-
-        Set<String> synchronizedSet = Collections.synchronizedSet(hrefs);
+        ExecutorService executor = Executors.newFixedThreadPool(20);
 
         int o = 1;
-        log.info("Set size: {}", synchronizedSet.size());
-        List<String> listHrefs = List.copyOf(hrefs);
+        log.info("Set size: {}", hrefs.size());
 
-        listHrefs.stream().forEach(href -> {
+        hrefs.forEach(href -> {
             executor.submit(() -> getSkillsFromPage(href, o));
             log.info("submit counter: {}", o);
         });
 
-//        for (String href : hrefs) {
-//            int finalO = o;
-//            executor.submit(() -> getSkillsFromPage(href, finalO));
-//            log.info("submit counter: {}", o);
-////            try {
-////                Thread.sleep(500);
-////            } catch (InterruptedException e) {
-////                throw new RuntimeException(e);
-////            } finally {
-////                o++;
-////            }
-//        }
-//        try {
-//            executor.awaitTermination(35, TimeUnit.SECONDS);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } finally {
-//            executor.shutdown();
-//        }
-
-//        pageRepo.saveAll(skills);
         executor.shutdown();
-        log.info("Process of parse skills took: {} seconds", ChronoUnit.SECONDS.between(start, LocalDateTime.now()));
-//        driver.quit();
     }
 
     private void getSkillsFromPage(String href, int counter) {
-//        System.setProperty("webdriver.chrome.driver", "./webdrivers/chromedriver");
         ChromeOptions options = new ChromeOptions();
-        options.addArguments("--remote-debugging-port=9222", "--ignore-certificate-errors");
+        options.addArguments("--ignore-certificate-errors");
         options.addArguments("--headless");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
         options.setLogLevel(ChromeDriverLogLevel.OFF);
         WebDriver myDriver = new ChromeDriver(options);
         myDriver.get(href);
-//        try {
-//            Thread.sleep(1000);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
+
         List<WebElement> elements = myDriver.findElements(By.className("css-1xm32e0"));
+        while (elements.isEmpty()) {
+            elements = myDriver.findElements(By.className("css-1xm32e0"));
+        }
         log.info("elements size is: {}; Thread name: {}, counter: {}", elements.size(), Thread.currentThread().getName(), counter);
         elements.forEach(webElement -> {
             Skill mySkill = Skill.builder()
@@ -158,7 +121,7 @@ class PageServiceExecutorServiceImpl implements PageService {
     private WebDriver getWebDriver(String url) {
         WebDriver driver = customWebDriver.getWebDriver();
         driver.get(url);
-        Sleeper.sleepRandom(2, 4);
+        Sleeper.sleepExactly(3);
         return driver;
     }
 
