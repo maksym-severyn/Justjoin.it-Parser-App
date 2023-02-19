@@ -7,18 +7,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.*;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
 import java.util.*;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Profile("!default")
 class PageServiceStandardImpl implements PageService {
 
     private static final String CITY = "warszawa";
@@ -35,7 +35,7 @@ class PageServiceStandardImpl implements PageService {
      * dlatego zmienna 'l' jednorozowo zwiększa się o +2, żeby pętla zaczęła chodzić od div[3] do div[11],
      * i następnie znów od div[3] do div[11], dopóki nie poleci wyjątek że nie ma elementu
      */
-//    @EventListener(ApplicationReadyEvent.class)
+    @EventListener(ApplicationReadyEvent.class)
     public void parsePage() {
         WebDriver driver = getWebDriver("https://justjoin.it/" + CITY + "/java/" + POSITION_LEVEL);
         driver.manage().window().setSize(new Dimension(900, 900));
@@ -67,7 +67,7 @@ class PageServiceStandardImpl implements PageService {
                         .executeScript("arguments[0].scrollIntoView(true);", element);
                 Sleeper.sleep(200);
             }
-            if (infiniteHrefProtectCounter >= 200) { //zmień na 200!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (infiniteHrefProtectCounter >= 800) { //zmień na 200!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 break;
             }
         }
@@ -101,7 +101,7 @@ class PageServiceStandardImpl implements PageService {
     private WebDriver getWebDriver(String url) {
         WebDriver driver = customWebDriver.getWebDriver();
         driver.get(url);
-        Sleeper.sleepRandom(3, 4);
+//        Sleeper.sleepRandom(3, 4);
         return driver;
     }
 

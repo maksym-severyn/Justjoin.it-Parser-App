@@ -1,19 +1,13 @@
 package com.example.justjoinparser;
 
 import com.example.justjoinparser.repo.PageRepo;
-import com.example.justjoinparser.webdriver.CustomWebDriver;
 import javax.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.output.NullOutputStream;
 import org.openqa.selenium.*;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeDriverLogLevel;
-import org.openqa.selenium.chrome.ChromeDriverService;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.remote.service.DriverService;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -32,30 +26,27 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 class PageServiceReactiveImpl implements PageService {
 
-    private static final Map<String, String> DICTIONARY = Map.ofEntries(
-            Map.entry("rest", "REST"),
-            Map.entry("webservice", "WebServices"),
-            Map.entry("web services", "WebServices"),
-            Map.entry("microservice", "Microservices"),
-            Map.entry("angular", "Angular"),
-            Map.entry("html", "HTML"),
-            Map.entry("hibernate", "Hibernate"),
-            Map.entry("jpa", "Hibernate"),
-            Map.entry("amazon", "AWS"),
-            Map.entry("aws", "AWS"),
-            Map.entry("bazy danych", "SQL"),
-            Map.entry("database", "SQL"),
-            Map.entry("github", "Git"),
-            Map.entry("Gitlab", "Git"),
-            Map.entry("mongodb", "NoSQL"),
-            Map.entry("postresql", "PostgreSQL")
+    private static final Map<String, List<String>> DICTIONARY = Map.ofEntries(
+        Map.entry("REST", List.of("rest")),
+        Map.entry("Spring", List.of("spring boot", "spring framework")),
+        Map.entry("CI/CD", List.of("ci", "ci/cd (jenkins);")),
+        Map.entry("Java", List.of("java 8+", "java 8", "java 11", "Java11")),
+        Map.entry("WebServices", List.of("webservice", "webservices")),
+        Map.entry("Microservices", List.of("microservice")),
+        Map.entry("Angular", List.of("angular")),
+        Map.entry("HTML", List.of("html")),
+        Map.entry("Hibernate", List.of("hibernate", "jpa")),
+        Map.entry("AWS", List.of("amazon", "aws")),
+        Map.entry("SQL", List.of("database", "bazy danych", "sql server")),
+        Map.entry("Git", List.of("github", "gitlab", "git lab", "git/bitbucket")),
+        Map.entry("NoSQL", List.of("mongodb")),
+        Map.entry("PostgreSQL", List.of("postresql", "postgre sql"))
     );
 
-    private static final int COUNT_OF_THREAD = 20;
-    private static final String CITY = "wroclaw";
+    private static final int COUNT_OF_THREAD = 15;
+    private static final String CITY = "all";
     private static final String POSITION_LEVEL = "mid";
-
-    private final CustomWebDriver customWebDriver;
+    private final ApplicationContext applicationContext;
     private final PageRepo pageRepo;
 
     /**
@@ -69,7 +60,6 @@ class PageServiceReactiveImpl implements PageService {
     @EventListener(ApplicationReadyEvent.class)
     public void parsePage() {
         WebDriver driver = getWebDriver("https://justjoin.it/" + CITY + "/java/" + POSITION_LEVEL, 4);
-        driver.manage().window().setSize(new Dimension(900, 900));
         Set<String> hrefs = new HashSet<>();
 
         boolean shouldProcess = true;
@@ -98,7 +88,7 @@ class PageServiceReactiveImpl implements PageService {
                         .executeScript("arguments[0].scrollIntoView(true);", element);
                 Sleeper.sleep(220);
             }
-            if (infiniteHrefProtectCounter >= 500) { //zmień na 200!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if (infiniteHrefProtectCounter >= 1000) { //zmień na 200!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 log.warn("Infinite breaker activate!");
                 break;
             }
@@ -115,10 +105,8 @@ class PageServiceReactiveImpl implements PageService {
 //                        .subscribeOn(Schedulers.boundedElastic())
 //                        .subscribeOn(Schedulers.parallel())
                         .then())
-                .doOnComplete(() -> {
-                    log.info("Process of parse skills took: {} seconds",
-                        ChronoUnit.SECONDS.between(start, LocalDateTime.now()));
-                })
+                .doOnComplete(() -> log.info("Process of parse skills took: {} seconds",
+                    ChronoUnit.SECONDS.between(start, LocalDateTime.now())))
                 .subscribe();
 
         log.info("Main thread get finish");
@@ -128,9 +116,7 @@ class PageServiceReactiveImpl implements PageService {
     public void parseAndSaveSkillsFromHref(String href) {
         Assert.notNull(href, "input cannot be null");
 
-        WebDriver myDriver = customWebDriver.getWebDriver();
-        myDriver.get(href);
-        myDriver.manage().window().setSize(new Dimension(900, 900));
+        WebDriver myDriver = getWebDriver(href, 1);
 
         List<WebElement> elements = getElementsFromPage(myDriver, "css-1xm32e0");
 
@@ -160,9 +146,9 @@ class PageServiceReactiveImpl implements PageService {
 
     private Skill compareAndSetSkillNameAccordingWithDictionary(Skill skill) {
         String name = skill.getName().toLowerCase();
-        for (Map.Entry<String, String> entry : DICTIONARY.entrySet()) {
-            if (name.contains(entry.getKey())) {
-                skill.setName(entry.getValue());
+        for (Map.Entry<String, List<String>> entry : DICTIONARY.entrySet()) {
+            if (entry.getValue().contains(name)) {
+                skill.setName(entry.getKey());
                 name = skill.getName().toLowerCase();
             }
         }
@@ -177,44 +163,13 @@ class PageServiceReactiveImpl implements PageService {
         return elements;
     }
 
-    private WebDriver openPage(String href) {
-        try {
-            WebDriver myDriver = createNewWebDriver();
-            myDriver.get(href);
-            myDriver.manage().window().setSize(new Dimension(900, 900));
-            return myDriver;
-        } catch (Exception e) {
-            log.error("WebDriver initialization failed! WebDriver is null", e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private WebDriver createNewWebDriver() {
-        DriverService.Builder<ChromeDriverService, ChromeDriverService.Builder> serviceBuilder = new ChromeDriverService.Builder();
-        ChromeDriverService chromeDriverService = serviceBuilder.build();
-        chromeDriverService.sendOutputTo(NullOutputStream.NULL_OUTPUT_STREAM);
-        return new ChromeDriver(chromeDriverService, getAnotherOptions());
-    }
-
-    private ChromeOptions getAnotherOptions() {
-        ChromeOptions options = new ChromeOptions();
-//        options.addArguments("--remote-debugging-port=9222");
-        options.addArguments("--ignore-certificate-errors");
-        options.addArguments("--headless");
-        options.addArguments("--disable-gpu");
-        options.addArguments("--no-sandbox");
-        options.setLogLevel(ChromeDriverLogLevel.OFF);
-        return options;
-    }
-
-
     private WebDriver getWebDriver(String url, @Nullable Integer sleepSec) {
-        WebDriver driver = customWebDriver.getWebDriver();
+        WebDriver driver = applicationContext.getBean("webDriver", WebDriver.class);
         driver.get(url);
         if (sleepSec != null) {
-            Sleeper.sleepExactly(sleepSec);
+            Sleeper.sleep(10);
         }
+        driver.manage().window().setSize(new Dimension(900, 900));
         return driver;
     }
-
 }

@@ -8,7 +8,9 @@ import org.openqa.selenium.chrome.ChromeDriverLogLevel;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.util.Assert;
 
 @Configuration
@@ -18,7 +20,8 @@ public class CustomWebDriver {
     @Value("${webdriver.host}")
     private String driverPath;
 
-//    @Bean
+    @Bean("webDriver")
+    @Scope("prototype")
     public WebDriver getWebDriver() {
         WebDriver driver = null;
         try {
