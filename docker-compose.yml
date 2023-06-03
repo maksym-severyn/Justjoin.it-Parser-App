@@ -2,17 +2,39 @@ version: '3.9'
 
 services:
 
-  db:
-    image: mysql:8.0.28
-    container_name: mysql_justjoinitparser
-    restart: always
+  db-mongo:
+    build:
+      dockerfile: waitForItWithMongo.Dockerfile
+    container_name: justjoinit_parser_mongo_db
+    volumes:
+      - db_mongo_data:/var/lib/mongo
+    healthcheck:
+      test: bash -c "/wait-for-it.sh -t 0 db-mongo:27017 -- echo 'MongoDB is up!'"
     environment:
-      MYSQL_ROOT_PASSWORD: superSecretRootPassword
-      MYSQL_DATABASE: db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: superSecretPassword
+      MONGO_INITDB_DATABASE: local
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
     ports:
-      - "3306:3306"
+      - "27017:27017"
+    networks:
+      - justjoinit_parser_nw
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: justjoinit_parser_mongo_db_express
+    restart: on-failure
+    environment:
+      ME_CONFIG_MONGODB_SERVER: db-mongo     # name of mongoDb docker service
+      ME_CONFIG_MONGODB_PORT: "27017"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+    ports:
+      - "8081:8081"
+    networks:
+      - justjoinit_parser_nw
+    depends_on:
+      db-mongo:
+        condition: service_healthy
 
   chrome:
     image: selenium/node-chrome:4.1.4-20220427
@@ -27,7 +49,9 @@ services:
       SE_NODE_MAX_INSTANCES: 2
       SE_NODE_MAX_SESSIONS: 34
       SE_NODE_OVERRIDE_MAX_SESSIONS: true
-      SE_NODE_SESSION_TIMEOUT: 30
+      SE_NODE_SESSION_TIMEOUT: 40
+    networks:
+      - justjoinit_parser_nw
 
   selenium-hub:
     image: selenium/hub:4.1.4-20220427
@@ -36,3 +60,15 @@ services:
       - "4442:4442"
       - "4443:4443"
       - "4444:4444"
+    networks:
+      - justjoinit_parser_nw
+
+networks:
+  justjoinit_parser_nw:
+    name: justjoinit_parser_nw
+    driver: bridge
+
+volumes:
+  db_mongo_data:
+    name: db_mongo_data
+
