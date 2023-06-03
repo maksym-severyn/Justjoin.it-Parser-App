@@ -3,8 +3,9 @@ package com.example.justjoinparser.webdriver;
 import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriverLogLevel;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +21,7 @@ public class CustomWebDriver {
     @Value("${webdriver.host}")
     private String driverPath;
 
-    @Bean("webDriver")
+    @Bean(Constants.WEBDRIVER_BEAN_NAME)
     @Scope("prototype")
     public WebDriver getWebDriver() {
         WebDriver driver = null;
@@ -30,6 +31,7 @@ public class CustomWebDriver {
             log.error("Custom exception: cannot create ChromeDriver!", e);
         }
         Assert.notNull(driver, "Driver cannot be null!");
+        enableStealth(driver);
         return driver;
     }
 
@@ -40,8 +42,16 @@ public class CustomWebDriver {
         options.addArguments("--headless");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
-        options.setLogLevel(ChromeDriverLogLevel.OFF);
+        options.addArguments("--disable-blink-features=AutomationControlled");
+        options.addArguments("--disable-extensions");
+        options.addArguments(
+            "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36");
+        options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         return options;
     }
 
+    private void enableStealth(WebDriver driver) {
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+        js.executeScript("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})");
+    }
 }
