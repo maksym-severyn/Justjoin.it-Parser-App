@@ -49,7 +49,7 @@ services:
       SE_NODE_MAX_INSTANCES: 2
       SE_NODE_MAX_SESSIONS: 34
       SE_NODE_OVERRIDE_MAX_SESSIONS: true
-      SE_NODE_SESSION_TIMEOUT: 40
+      SE_NODE_SESSION_TIMEOUT: 500
     networks:
       - justjoinit_parser_nw
 

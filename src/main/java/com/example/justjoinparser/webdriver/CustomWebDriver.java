@@ -2,6 +2,7 @@ package com.example.justjoinparser.webdriver;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.PageLoadStrategy;
@@ -21,7 +22,7 @@ public class CustomWebDriver {
     @Value("${webdriver.host}")
     private String driverPath;
 
-    @Bean(Constants.WEBDRIVER_BEAN_NAME)
+    @Bean
     @Scope("prototype")
     public WebDriver getWebDriver() {
         WebDriver driver = null;
@@ -44,8 +45,15 @@ public class CustomWebDriver {
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--disable-extensions");
+        options.addArguments("--auto-open-devtools-for-tabs");
+        options.addArguments("start-maximized");
         options.addArguments(
-            "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36");
+            "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
+        );
+
+        options.setExperimentalOption("excludeSwitches", Collections.singletonList("enable-automation"));
+        options.setExperimentalOption("useAutomationExtension", false);
+
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         return options;
     }
