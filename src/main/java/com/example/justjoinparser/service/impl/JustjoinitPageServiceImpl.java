@@ -50,7 +50,7 @@ class JustjoinitPageServiceImpl implements PageService {
 
         return Flux.fromIterable(hrefs)
             .flatMap(href ->
-                Mono.fromCallable(() -> parseOfferFromHref(href, positionLevel, city))
+                Mono.fromCallable(() -> parseOfferFromHref(href, positionLevel, city, technology))
                     .subscribeOn(Schedulers.parallel())
                     .map(this::renameSkillsIfNeed)
             )
@@ -58,7 +58,7 @@ class JustjoinitPageServiceImpl implements PageService {
                 + throwable.getMessage(), throwable));
     }
 
-    private OfferDto parseOfferFromHref(String href, PositionLevel positionLevel, City city) {
+    private OfferDto parseOfferFromHref(String href, PositionLevel positionLevel, City city, Technology technology) {
         Assert.notNull(href, "href cannot be null");
 
         WebDriver myDriver = webDriverUtil.getWebDriverNewInstance(href);
@@ -77,6 +77,7 @@ class JustjoinitPageServiceImpl implements PageService {
             .seniority(positionLevel)
             .city(city)
             .offerLink(href)
+            .technology(technology)
             .build();
     }
 
