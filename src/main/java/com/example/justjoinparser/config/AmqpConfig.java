@@ -4,7 +4,6 @@ import static reactor.rabbitmq.ResourcesSpecification.binding;
 import static reactor.rabbitmq.ResourcesSpecification.exchange;
 import static reactor.rabbitmq.ResourcesSpecification.queue;
 
-import com.example.justjoinparser.amqp.QueueBindingVariables;
 import com.rabbitmq.client.ConnectionFactory;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.RabbitFlux;
+import reactor.rabbitmq.Receiver;
+import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 import reactor.util.retry.Retry;
@@ -48,19 +49,45 @@ public class AmqpConfig {
     SenderOptions senderOptions(ConnectionFactory connectionFactory) {
         return new SenderOptions()
             .connectionFactory(connectionFactory)
+            .connectionSupplier(cf -> cf.newConnection("sender"))
             .connectionMonoConfigurator(cm -> {
                 log.info(
-                    "In case of Connection lost, there will be retrying mechanism with {} attempts and {} ms backoff",
-                    this.retryMaxAttempts, this.exponentialBackoffMs);
+                    "Sender: in case of Connection lost, there will be retrying mechanism with {} attempts and {}" +
+                        "ms backoff", this.retryMaxAttempts, this.exponentialBackoffMs);
                 return cm.retryWhen(
                     Retry.backoff(this.retryMaxAttempts, Duration.ofMillis(this.exponentialBackoffMs))
                         .jitter(this.jitterFactor)
-                        .doAfterRetry(rs -> log.info("Retry to connect with message broker, attempt {}",
+                        .doAfterRetry(rs -> log.info("Sender: retry to connect with message broker, attempt {}",
                             rs.totalRetries()))
                         .onRetryExhaustedThrow((spec, rs) -> rs.failure())
                 );
             })
             .resourceManagementScheduler(Schedulers.boundedElastic());
+    }
+
+    @Bean
+    ReceiverOptions receiverOptionsOptions(ConnectionFactory connectionFactory) {
+        return new ReceiverOptions()
+            .connectionFactory(connectionFactory)
+            .connectionSupplier(cf -> cf.newConnection("receiver"))
+            .connectionMonoConfigurator(cm -> {
+                log.info(
+                    "Receiver: in case of Connection lost, there will be retrying mechanism with {} attempts and {}" +
+                        "ms backoff", this.retryMaxAttempts, this.exponentialBackoffMs);
+                return cm.retryWhen(
+                    Retry.backoff(this.retryMaxAttempts, Duration.ofMillis(this.exponentialBackoffMs))
+                        .jitter(this.jitterFactor)
+                        .doAfterRetry(rs -> log.info("Receiver: retry to connect with message broker, attempt {}",
+                            rs.totalRetries()))
+                        .onRetryExhaustedThrow((spec, rs) -> rs.failure())
+                );
+            })
+            .connectionSubscriptionScheduler(Schedulers.boundedElastic());
+    }
+
+    @Bean
+    public Receiver receiver(ReceiverOptions receiverOptions) {
+        return RabbitFlux.createReceiver(receiverOptions);
     }
 
     @Bean
@@ -77,7 +104,7 @@ public class AmqpConfig {
      */
     private void declareAndBindQueuesAndExchanges(Sender sender) {
         // Declare all exchanges
-        Flux<Void> declareExchanges = Flux.fromIterable(QueueBindingVariables.EXCHANGES.entrySet())
+        Flux<Void> declareExchanges = Flux.fromIterable(AmqpQueueBindingVariables.EXCHANGES.entrySet())
             .flatMap(entry -> {
                 String exchangeName = entry.getKey();
                 String exchangeType = entry.getValue().getName();
@@ -85,11 +112,11 @@ public class AmqpConfig {
             });
 
         // Declare all queues
-        Flux<Void> declareQueues = Flux.fromIterable(QueueBindingVariables.QUEUES)
+        Flux<Void> declareQueues = Flux.fromIterable(AmqpQueueBindingVariables.QUEUES)
             .flatMap(queueName -> sender.declare(queue(queueName)).then());
 
         // Bind queues
-        Flux<Void> bindQueues = Flux.fromIterable(QueueBindingVariables.BINDINGS)
+        Flux<Void> bindQueues = Flux.fromIterable(AmqpQueueBindingVariables.BINDINGS)
             .flatMap(bindingTriplet -> {
                 String exchange = bindingTriplet.getValue0();
                 String queue = bindingTriplet.getValue1();

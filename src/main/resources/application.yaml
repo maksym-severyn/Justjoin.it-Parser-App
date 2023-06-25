@@ -24,7 +24,7 @@ message-broker-custom-config:
       interval-ms: 1000
   broker:
     retry-on-fail-connection:
-      max-attempts: 3
+      max-attempts: 4
       exponential-backoff-ms: 6000
       jitter-factor: 0
 

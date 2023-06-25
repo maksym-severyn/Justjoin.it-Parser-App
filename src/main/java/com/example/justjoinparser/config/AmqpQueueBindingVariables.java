@@ -1,14 +1,16 @@
-package com.example.justjoinparser.amqp;
+package com.example.justjoinparser.config;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.javatuples.Triplet;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class QueueBindingVariables {
+public class AmqpQueueBindingVariables {
 
     /**
      * Set contains queues to be declare.
@@ -77,4 +79,16 @@ public class QueueBindingVariables {
         Triplet.with("offers.exchange", "offers.wroclaw", "offers.wroclaw.*"),
         Triplet.with("offers.exchange", "offers.zielona_gora", "offers.zielona_gora.*")
     );
+
+    @RequiredArgsConstructor
+    @Getter
+    public enum ExchangeType {
+
+        DIRECT("direct"),
+        TOPIC("topic"),
+        FANOUT("fanout"),
+        HEADERS("headers");
+
+        private final String name;
+    }
 }

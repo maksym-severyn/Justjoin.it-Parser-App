@@ -1,4 +1,4 @@
-package com.example.justjoinparser.amqp;
+package com.example.justjoinparser.amqp.publisher;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Publisher;
@@ -55,12 +56,17 @@ public class MessageBrokerPublisher {
             );
     }
 
+    @PreDestroy
+    public void closeSender() {
+        sender.close();
+    }
+
     /**
      * Publish message via RabbitMQ.
      *
      * @param exchange   exchange to message should be published
      * @param routingKey used for forward message to one or more queues
-     * @param body       body of message
+     * @param body       flux or mono with body of message
      */
     public void sendMessage(String exchange, String routingKey, Publisher<Object> body) {
         sender.sendWithPublishConfirms(
