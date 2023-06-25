@@ -25,16 +25,16 @@ class JustjointLinkServiceImpl implements LinkService {
 
     private final WebDriverUtil webDriverUtil;
 
-    @Value("${websiteToParse.justjoinit.domain}")
+    @Value("${website-to-parse.justjoinit.domain}")
     private String justjoinitDomain;
 
-    @Value("${websiteToParse.justjoinit.divToOfferList}")
+    @Value("${website-to-parse.justjoinit.div-to-offer-list}")
     private String parentDivPath;
 
-    @Value("${websiteToParse.justjoinit.offer.height}")
+    @Value("${website-to-parse.justjoinit.offer.height}")
     private String offerBoxHeight;
 
-    @Value("${websiteToParse.justjoinit.offer.endOfOffersMessageAnnouncing}")
+    @Value("${website-to-parse.justjoinit.offer.end-of-offers-message-announcing}")
     private String endOfOffersMessageAnnouncing;
 
     @Override

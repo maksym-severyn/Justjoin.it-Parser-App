@@ -37,7 +37,7 @@ class JustjoinitPageServiceImpl implements PageService {
     private final LinkService offerLinkService;
     private final WebDriverUtil webDriverUtil;
 
-    @Value("${websiteToParse.justjoinit.skill.className}")
+    @Value("${website-to-parse.justjoinit.skill.class-name}")
     private String skillClassName;
 
     @Override
