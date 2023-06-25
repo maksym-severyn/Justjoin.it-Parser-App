@@ -4,17 +4,15 @@ import static reactor.rabbitmq.ResourcesSpecification.binding;
 import static reactor.rabbitmq.ResourcesSpecification.exchange;
 import static reactor.rabbitmq.ResourcesSpecification.queue;
 
-import com.example.justjoinparser.QueueBindingConfig;
+import com.example.justjoinparser.amqp.QueueBindingVariables;
 import com.rabbitmq.client.ConnectionFactory;
 import java.time.Duration;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
@@ -69,26 +67,34 @@ public class AmqpConfig {
     public Sender sender(SenderOptions senderOptions) {
         Sender sender = RabbitFlux.createSender(senderOptions);
         bindQueues(sender);
-
         return sender;
     }
 
     private void bindQueues(Sender sender) {
-        Mono<?> declaration = sender.declare(exchange("offers.exchange").type("topic"));
-        for (Map.Entry<String, Pair<String, String>> entry : QueueBindingConfig.QUEUE_BINDING.entrySet()) {
-            declaration = declaration.then(sender.declare(queue(entry.getValue().getValue1())
-                    .durable(true)
-                    .exclusive(false)
-                    .autoDelete(false)
-                ))
-                .then(sender.bind(binding(entry.getValue().getValue0(), entry.getKey(), entry.getValue().getValue1())));
-        }
+        // Declare all the exchanges
+        Flux<Void> declareExchanges = Flux.fromIterable(QueueBindingVariables.EXCHANGES.entrySet())
+            .flatMap(entry -> {
+                String exchangeName = entry.getKey();
+                String exchangeType = entry.getValue().getName();
+                return sender.declare(exchange(exchangeName).type(exchangeType)).then();
+            });
 
-        declaration.subscribe(r -> log.info("Exchange, queues, and bindings declared and bound"));
+        // Declare all the queues
+        Flux<Void> declareQueues = Flux.fromIterable(QueueBindingVariables.QUEUES)
+            .flatMap(queueName -> sender.declare(queue(queueName)).then());
 
-        //sender.declare(exchange("offers.exchange").type("topic"))
-        //    .then(sender.declare(queue("offers.warszawa")))
-        //    .then(sender.bind(binding("offers.exchange", "offers.warszawa.*", "offers.warszawa")))
-        //    .subscribe(r -> System.out.println("Exchange and queue declared and bound"));
+        // Bind the queues
+        Flux<Void> bindQueues = Flux.fromIterable(QueueBindingVariables.BINDINGS)
+            .flatMap(bindingTriplet -> {
+                String exchange = bindingTriplet.getValue0();
+                String queue = bindingTriplet.getValue1();
+                String routingKey = bindingTriplet.getValue2();
+                return sender.bind(binding(exchange, routingKey, queue)).then();
+            });
+
+        // Combine all the operations
+        Flux.concat(declareExchanges, declareQueues, bindQueues)
+            .doOnTerminate(() -> log.info("Exchanges and queues declared and bound"))
+            .subscribe();
     }
 }
