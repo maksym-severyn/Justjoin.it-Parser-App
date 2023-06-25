@@ -10,6 +10,23 @@ spring:
       username: admin
       password: admin
       authentication-database: admin
+  rabbitmq:
+    username: ${RABBIT_USERNAME:max_user_rabbit}
+    password: ${RABBIT_PASSWORD:max_password_rabbit}
+    host: ${RABBIT_HOST:localhost}
+    port: ${RABBIT_HOST:5672}
+
+message-broker-custom-config:
+  message:
+    expiration-time-ms: 300000
+    retry-on-fail:
+      max-duration-sec: 30
+      interval-ms: 1000
+  broker:
+    retry-on-fail-connection:
+      max-attempts: 3
+      exponential-backoff-ms: 6000
+      jitter-factor: 0
 
 webdriver:
   host: http://localhost:4444/wd/hub

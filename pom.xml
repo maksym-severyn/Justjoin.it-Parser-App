@@ -21,6 +21,8 @@
         <org.projectlombok.version>1.18.24</org.projectlombok.version>
         <selenium.version>4.9.1</selenium.version>
         <embedded-mongo.version>3.4.8</embedded-mongo.version>
+        <reactor-rabbitmq.version>1.5.6</reactor-rabbitmq.version>
+        <javatuples.version>1.2</javatuples.version>
     </properties>
 
     <dependencies>
@@ -58,6 +60,20 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor.rabbitmq</groupId>
+            <artifactId>reactor-rabbitmq</artifactId>
+            <version>${reactor-rabbitmq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javatuples</groupId>
+            <artifactId>javatuples</artifactId>
+            <version>${javatuples.version}</version>
         </dependency>
         <dependency>
             <groupId>org.mapstruct</groupId>
@@ -102,7 +118,6 @@
                         </path>
                     </annotationProcessorPaths>
                     <compilerArgs>
-                        <arg>-Amapstruct.suppressGeneratorTimestamp=true</arg>
                         <arg>-Amapstruct.defaultComponentModel=spring</arg>
                     </compilerArgs>
                 </configuration>
