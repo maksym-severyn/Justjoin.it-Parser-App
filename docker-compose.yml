@@ -69,9 +69,15 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - ${PWD}/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ${PWD}/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
     environment:
       - RABBITMQ_DEFAULT_USER=max_user_rabbit
       - RABBITMQ_DEFAULT_PASS=max_password_rabbit
+      - RABBITMQ_DEFINITIONS=/etc/rabbitmq/definitions.json
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbitmq_management load_definitions "/etc/rabbitmq/definitions.json"
     networks:
       - justjoinit_parser_nw
 

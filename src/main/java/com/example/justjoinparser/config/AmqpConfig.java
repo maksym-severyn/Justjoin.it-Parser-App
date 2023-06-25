@@ -66,12 +66,17 @@ public class AmqpConfig {
     @Bean
     public Sender sender(SenderOptions senderOptions) {
         Sender sender = RabbitFlux.createSender(senderOptions);
-        bindQueues(sender);
+        // declareAndBindQueuesAndExchanges(sender);
         return sender;
     }
 
-    private void bindQueues(Sender sender) {
-        // Declare all the exchanges
+    /**
+     * Binding has been moved to a rabbitmq_definitions.json file, that is loaded
+     * together with the launch of the RabbitMQ instance in Docker.
+     * The binding code below leaved as an example.
+     */
+    private void declareAndBindQueuesAndExchanges(Sender sender) {
+        // Declare all exchanges
         Flux<Void> declareExchanges = Flux.fromIterable(QueueBindingVariables.EXCHANGES.entrySet())
             .flatMap(entry -> {
                 String exchangeName = entry.getKey();
@@ -79,11 +84,11 @@ public class AmqpConfig {
                 return sender.declare(exchange(exchangeName).type(exchangeType)).then();
             });
 
-        // Declare all the queues
+        // Declare all queues
         Flux<Void> declareQueues = Flux.fromIterable(QueueBindingVariables.QUEUES)
             .flatMap(queueName -> sender.declare(queue(queueName)).then());
 
-        // Bind the queues
+        // Bind queues
         Flux<Void> bindQueues = Flux.fromIterable(QueueBindingVariables.BINDINGS)
             .flatMap(bindingTriplet -> {
                 String exchange = bindingTriplet.getValue0();
