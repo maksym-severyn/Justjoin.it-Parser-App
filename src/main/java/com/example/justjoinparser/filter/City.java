@@ -31,4 +31,13 @@ public enum City {
 
     @JsonValue
     private final String value;
+
+    public static City getFromValue(String value) {
+        for (City city: City.values()) {
+            if (city.getValue().equals(value)) {
+                return city;
+            }
+        }
+        throw new IllegalArgumentException("Cannot parse %s into City".formatted(value));
+    }
 }

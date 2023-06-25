@@ -13,4 +13,13 @@ public enum PositionLevel {
     SENIOR("senior");
 
     private final String value;
+
+    public static PositionLevel getFromValue(String value) {
+        for (PositionLevel positionLevel: PositionLevel.values()) {
+            if (positionLevel.getValue().equals(value)) {
+                return positionLevel;
+            }
+        }
+        throw new IllegalArgumentException("Cannot parse %s into PositionLevel".formatted(value));
+    }
 }
