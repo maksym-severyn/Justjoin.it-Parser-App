@@ -1,15 +1,20 @@
-version: '3.9'
+version: "3.8"
 
 services:
 
   db-mongo:
     build:
-      dockerfile: docker_config/mongodb/waitForItWithMongo.Dockerfile
+      context: ./docker_config/mongodb
+      dockerfile: waitForItWithMongo.Dockerfile
     container_name: justjoinit_parser_mongo_db
     volumes:
       - db_mongo_data:/var/lib/mongo
     healthcheck:
-      test: bash -c "/wait-for-it.sh -t 5 db-mongo:27017 -- echo 'MongoDB is up!'"
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+      test: bash -c "/wait-for-it.sh -t 0 db-mongo:27017 -- echo 'MongoDB is up!'"
     environment:
       MONGO_INITDB_DATABASE: local
       MONGO_INITDB_ROOT_USERNAME: admin
@@ -41,7 +46,8 @@ services:
     container_name: chrome_container
     shm_size: 3gb
     depends_on:
-      - selenium-hub
+      selenium-hub:
+        condition: service_started
     environment:
       SE_EVENT_BUS_HOST: selenium-hub
       SE_EVENT_BUS_PUBLISH_PORT: 4442
@@ -72,6 +78,12 @@ services:
     volumes:
       - ./docker_config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
       - ./docker_config/rabbitmq/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 4
+      start_period: 5s
+      test: [ "CMD", "rabbitmqctl", "list_users" ]
     environment:
       - RABBITMQ_DEFAULT_USER=max_user_rabbit
       - RABBITMQ_DEFAULT_PASS=max_password_rabbit
