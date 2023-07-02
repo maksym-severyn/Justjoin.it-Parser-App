@@ -18,7 +18,7 @@ spring:
 
 message-broker-custom-config:
   message:
-    expiration-time-ms: 300000
+    expiration-time-ms: 600000
     retry-on-fail:
       max-duration-sec: 30
       interval-ms: 1000
@@ -44,3 +44,14 @@ website-to-parse:
       end-of-offers-message-announcing: 'Subscribe to the job alert:'
     skill:
       class-name: css-1xm32e0
+
+scheduler:
+  parse-offers:
+    java:
+      mid:
+        cron: "0 0 7 * * ?"
+        timezone: "Europe/Warsaw"
+    python:
+      mid:
+        cron: "0 0 8 * * ?"
+        timezone: "Europe/Warsaw"
