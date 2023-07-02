@@ -15,12 +15,12 @@ import reactor.rabbitmq.Receiver;
 class ExampleConsumerImpl extends MessageBrokerAbstractConsumer<OfferDto> {
 
     protected ExampleConsumerImpl(Receiver receiver, ObjectMapper objectMapper) {
-        super("offers.warszawa", receiver, objectMapper, OfferDto.class);
+        super("offers.trojmiasto", receiver, objectMapper, OfferDto.class);
     }
 
     @Override
     protected Mono<Void> handleMessage(OfferDto body) {
-        log.info("Sample reactive consumer. Should provider here a message handling");
+//        log.info("Sample reactive consumer. Should provider here a message handling");
         return Mono.empty();
     }
 }
