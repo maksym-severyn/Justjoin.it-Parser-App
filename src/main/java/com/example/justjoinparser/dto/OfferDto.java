@@ -3,6 +3,7 @@ package com.example.justjoinparser.dto;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Builder;
 
@@ -13,6 +14,8 @@ public record OfferDto(
     City city,
     Technology technology,
     String offerLink,
-    List<SkillDto> skills
+    List<SkillDto> skills,
+    LocalDateTime createdDate,
+    LocalDateTime lastModifiedDate
 ) {
 }
