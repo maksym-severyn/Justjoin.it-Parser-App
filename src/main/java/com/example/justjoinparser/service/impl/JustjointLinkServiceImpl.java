@@ -5,6 +5,7 @@ import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
 import com.example.justjoinparser.service.LinkService;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,6 +16,8 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -47,8 +50,8 @@ class JustjointLinkServiceImpl implements LinkService {
                 positionLevel.getValue())
         );
 
-        WebElement parentDiv =
-            driver.findElement(By.xpath(parentDivPath));
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        WebElement parentDiv = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(parentDivPath)));
 
         Set<String> hrefSet = new HashSet<>();
 

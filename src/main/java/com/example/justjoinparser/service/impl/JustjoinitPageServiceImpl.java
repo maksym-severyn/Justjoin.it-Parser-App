@@ -13,7 +13,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.Executors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.By;
@@ -27,12 +27,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 class JustjoinitPageServiceImpl implements PageService {
+
+    private static final int CORES = Runtime.getRuntime().availableProcessors();
+    private static final Scheduler DOUBLE_CORES_EXECUTOR_SCHEDULER
+        = Schedulers.fromExecutor(Executors.newFixedThreadPool(CORES * 2));
+    public static final Scheduler FIVE_THREAD_EXECUTOR_SCHEDULER
+        = Schedulers.fromExecutorService(Executors.newFixedThreadPool(5), "fiveThreadEx");
 
     private final LinkService offerLinkService;
     private final WebDriverUtil webDriverUtil;
@@ -45,17 +53,41 @@ class JustjoinitPageServiceImpl implements PageService {
         Assert.noNullElements(new Object[] {positionLevel, city, technology},
             "input parameters (positionLevel, city, technology) cannot be null");
 
-        Set<String> hrefs = offerLinkService.getOfferLinks(technology, city, positionLevel);
-        log.info("Found count of offers: {}", hrefs.size());
-
-        return Flux.fromIterable(hrefs)
+        return Flux.defer(() -> Flux.just(offerLinkService.getOfferLinks(technology, city, positionLevel)))
+            .subscribeOn(FIVE_THREAD_EXECUTOR_SCHEDULER)
+            .retryWhen(
+                Retry.fixedDelay(5, Duration.ofSeconds(5))
+                    .filter(ex -> ex instanceof org.openqa.selenium.NoSuchElementException ||
+                        ex instanceof org.springframework.beans.factory.BeanCreationException ||
+                        ex instanceof org.openqa.selenium.StaleElementReferenceException ||
+                        ex instanceof org.openqa.selenium.TimeoutException)
+                    .doAfterRetry(rs -> log.info("Retry to get offers, attempt {}", rs.totalRetries() + 1))
+                    .onRetryExhaustedThrow((spec, rs) -> rs.failure())
+            )
+            .onErrorContinue((ex, obj) -> {
+                log.info("Cannot get links to offers with the given parameters. Error:\n");
+                ex.printStackTrace();
+            })
+            .doOnNext(hrefs -> log.info("Found count of offers: {}", hrefs.size()))
+            .flatMapIterable(setFlux -> setFlux)
             .flatMap(href ->
                 Mono.fromCallable(() -> parseOfferFromHref(href, positionLevel, city, technology))
-                    .subscribeOn(Schedulers.parallel())
+                    .retryWhen(
+                        Retry.fixedDelay(3, Duration.ofSeconds(3))
+                            .doAfterRetry(rs -> log.info("Retry to extract elements from offer, attempt {}",
+                                rs.totalRetries() + 1))
+                            .onRetryExhaustedThrow((spec, rs) -> rs.failure())
+                    )
+                    .onErrorContinue(
+                        TimeoutException.class,
+                        (throwable, obj) -> log.info("Cannot extract elements collection"))
                     .map(this::renameSkillsIfNeed)
+                    .subscribeOn(DOUBLE_CORES_EXECUTOR_SCHEDULER)
             )
-            .onErrorContinue(TimeoutException.class, (throwable, obj) -> log.error("Cannot open page!\n"
-                + throwable.getMessage(), throwable));
+            .onErrorContinue(
+                TimeoutException.class,
+                (throwable, obj) -> log.info("Cannot open page!%n%s".formatted(throwable.getMessage()), throwable))
+            .doOnComplete(() -> log.info("End of offer parsing"));
     }
 
     private OfferDto parseOfferFromHref(String href, PositionLevel positionLevel, City city, Technology technology) {
@@ -63,8 +95,8 @@ class JustjoinitPageServiceImpl implements PageService {
 
         WebDriver myDriver = webDriverUtil.getWebDriverNewInstance(href);
 
-        WebDriverWait wait = new WebDriverWait(myDriver, Duration.ofSeconds(3));
-        List<WebElement> elements = waitForElements(wait);
+        WebDriverWait wait = new WebDriverWait(myDriver, Duration.ofSeconds(3), Duration.ofSeconds(1));
+        List<WebElement> elements = waitForElements(wait, href);
 
         log.info("Elements collection size is: {}, offer: {}", elements.size(), href);
 
@@ -81,16 +113,15 @@ class JustjoinitPageServiceImpl implements PageService {
             .build();
     }
 
-    private List<WebElement> waitForElements(WebDriverWait waitDriver) {
-        List<WebElement> elements = new ArrayList<>();
+    private List<WebElement> waitForElements(WebDriverWait waitDriver, String href) {
         try {
-            elements = waitDriver.until(
+            return waitDriver.until(
                 ExpectedConditions.presenceOfAllElementsLocatedBy(By.className(skillClassName))
             );
         } catch (TimeoutException e) {
-            log.warn("Elements collection not available");
+            log.info("Elements collection not available for offer: {}. Try to retry...", href);
+            throw new TimeoutException();
         }
-        return elements;
     }
 
     private List<SkillDto> parseWebElementsIntoSkills(List<WebElement> elements) {
