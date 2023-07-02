@@ -5,6 +5,8 @@ import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
 import com.example.justjoinparser.service.OfferSendService;
 import lombok.RequiredArgsConstructor;
+import net.javacrumbs.shedlock.core.LockAssert;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -21,7 +23,9 @@ public class ParseOfferScheduler {
         cron = "${scheduler.parse-offers.java.mid.cron}",
         zone = "${scheduler.parse-offers.java.mid.timezone}"
     )
+    @SchedulerLock(name = "parseAndSendJavaMidOffersScheduler_task", lockAtMostFor = "15m", lockAtLeastFor = "5m")
     public void parseAndSendJavaMidOffersScheduler() {
+        LockAssert.assertLocked();
         parseAndSendMidOffersScheduler(Technology.JAVA);
     }
 
@@ -29,7 +33,9 @@ public class ParseOfferScheduler {
         cron = "${scheduler.parse-offers.python.mid.cron}",
         zone = "${scheduler.parse-offers.python.mid.timezone}"
     )
+    @SchedulerLock(name = "parseAndSendPythonMidOffersScheduler_task", lockAtMostFor = "15m", lockAtLeastFor = "5m")
     public void parseAndSendPythonMidOffersScheduler() {
+        LockAssert.assertLocked();
         parseAndSendMidOffersScheduler(Technology.PYTHON);
     }
 
