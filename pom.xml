@@ -23,6 +23,7 @@
         <embedded-mongo.version>3.4.8</embedded-mongo.version>
         <reactor-rabbitmq.version>1.5.6</reactor-rabbitmq.version>
         <javatuples.version>1.2</javatuples.version>
+        <disruptor.version>3.4.4</disruptor.version>
     </properties>
 
     <dependencies>
@@ -83,6 +84,25 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${org.mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <version>${disruptor.version}</version>
         </dependency>
     </dependencies>
 
