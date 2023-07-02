@@ -1,6 +1,7 @@
 package com.example.justjoinparser.service.impl;
 
 import com.example.justjoinparser.SkillsDictionary;
+import com.example.justjoinparser.exception.CannotParseOffersRequest;
 import com.example.justjoinparser.util.WebDriverUtil;
 import com.example.justjoinparser.dto.OfferDto;
 import com.example.justjoinparser.dto.SkillDto;
@@ -64,10 +65,10 @@ class JustjoinitPageServiceImpl implements PageService {
                     .doAfterRetry(rs -> log.info("Retry to get offers, attempt {}", rs.totalRetries() + 1))
                     .onRetryExhaustedThrow((spec, rs) -> rs.failure())
             )
-            .onErrorContinue((ex, obj) -> {
-                log.info("Cannot get links to offers with the given parameters. Error:\n");
-                ex.printStackTrace();
-            })
+            .onErrorMap(throwable -> new CannotParseOffersRequest(
+                "Cannot get links to offers with provided parameters. The page temporarily unavailable. Try again later",
+                throwable)
+            )
             .doOnNext(hrefs -> log.info("Found count of offers: {}", hrefs.size()))
             .flatMapIterable(setFlux -> setFlux)
             .flatMap(href ->
