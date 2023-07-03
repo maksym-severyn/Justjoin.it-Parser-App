@@ -1,5 +1,6 @@
 package com.example.justjoinparser.fto;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,6 +13,7 @@ public enum RequestPositionLevel {
     MID("mid"),
     SENIOR("senior");
 
+    @JsonValue
     private final String value;
 
     public static RequestPositionLevel getFromValue(String value) {
