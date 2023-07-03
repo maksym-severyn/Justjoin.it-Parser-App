@@ -5,30 +5,50 @@ import com.example.justjoinparser.converter.RequestPositionLevelToPositionLevelC
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.Technology;
 import com.example.justjoinparser.fto.OfferFto;
+import com.example.justjoinparser.fto.OfferParameterRequest;
 import com.example.justjoinparser.fto.RequestPositionLevel;
+import com.example.justjoinparser.service.OfferService;
 import com.example.justjoinparser.service.PageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
 public class JustjoinitOfferController {
 
     private final PageService pageService;
+    private final OfferService offerService;
     private final RequestPositionLevelToPositionLevelConverter positionConverter;
     private final OfferDtoToOfferFtoConverter offerDtoToOfferFtoConverter;
 
-    @GetMapping(value = "/{city}/{technology}/{position}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public ResponseEntity<Flux<OfferFto>> parseOfferForParameters(@PathVariable City city,
-                                                                  @PathVariable Technology technology,
-                                                                  @PathVariable RequestPositionLevel position) {
+    @PostMapping(value = "/", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public ResponseEntity<Flux<OfferFto>> initializeOfferParsingWithProvidedParams(
+            @RequestBody OfferParameterRequest request) {
 
-        return ResponseEntity.ok(pageService.parseOffers(positionConverter.convertTo(position), city, technology)
+        return ResponseEntity.ok(pageService.parseOffers(
+                        positionConverter.convertTo(request.seniority()),
+                        request.city(),
+                        request.technology()
+                )
+                .flatMap(offerService::save)
                 .map(offerDtoToOfferFtoConverter::convertTo));
+    }
+
+    @GetMapping("/top/{topCounter}")
+    public Mono<ResponseEntity<Map<String, Long>>> getExistingSkillsSkills(@PathVariable Long topCounter,
+                                                             @RequestParam City city,
+                                                             @RequestParam Technology technology,
+                                                             @RequestParam RequestPositionLevel position) {
+
+        return offerService.findTopSkillsByParameters(topCounter, positionConverter.convertTo(position), city, technology)
+                .filter(sortedSkillsMap -> !sortedSkillsMap.isEmpty())
+                .map(ResponseEntity::ok)
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
     }
 }

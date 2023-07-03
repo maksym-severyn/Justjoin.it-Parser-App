@@ -69,7 +69,8 @@ class JustjoinitPageServiceImpl implements PageService {
                 "Cannot get links to offers with provided parameters. The page temporarily unavailable. Try again later",
                 throwable)
             )
-            .doOnNext(hrefs -> log.info("Found count of offers: {}", hrefs.size()))
+            .doOnNext(hrefs -> log.info("Found count of offers: {} (technology: {}, city: {}, position: {})",
+                    hrefs.size(), technology, city, positionLevel))
             .flatMapIterable(setFlux -> setFlux)
             .flatMap(href ->
                 Mono.fromCallable(() -> parseOfferFromHref(href, positionLevel, city, technology))
@@ -88,7 +89,8 @@ class JustjoinitPageServiceImpl implements PageService {
             .onErrorContinue(
                 TimeoutException.class,
                 (throwable, obj) -> log.info("Cannot open page!%n%s".formatted(throwable.getMessage()), throwable))
-            .doOnComplete(() -> log.info("End of offer parsing"));
+            .doOnComplete(() ->
+                    log.info("End of offers for request: {technology: {}, city: {}, position: {}})", technology, city, positionLevel));
     }
 
     private OfferDto parseOfferFromHref(String href, PositionLevel positionLevel, City city, Technology technology) {

@@ -22,6 +22,7 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
         configurer.setTaskExecutor(taskExecutor());
+        configurer.setDefaultTimeout(30000);
     }
 
     private AsyncTaskExecutor taskExecutor() {
