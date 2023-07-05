@@ -62,11 +62,13 @@ class JustjoinitPageServiceImpl implements PageService {
                         ex instanceof org.springframework.beans.factory.BeanCreationException ||
                         ex instanceof org.openqa.selenium.StaleElementReferenceException ||
                         ex instanceof org.openqa.selenium.TimeoutException)
-                    .doAfterRetry(rs -> log.info("Retry to get offers, attempt {}", rs.totalRetries() + 1))
+                    .doAfterRetry(rs -> log.info("Retry to get offers for request: {}, {}, {}; attempt {}",
+                        technology, city, positionLevel, rs.totalRetries() + 1))
                     .onRetryExhaustedThrow((spec, rs) -> rs.failure())
             )
             .onErrorMap(throwable -> new CannotParseOffersRequest(
-                "Cannot get links to offers with provided parameters. The page temporarily unavailable. Try again later",
+                "Cannot get links to offers with provided parameters: %s, %s, %s. The page temporarily unavailable. Try again later"
+                    .formatted(technology, city, positionLevel),
                 throwable)
             )
             .doOnNext(hrefs -> log.info("Found count of offers: {} (technology: {}, city: {}, position: {})",

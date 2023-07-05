@@ -50,11 +50,15 @@ website-to-parse:
 
 scheduler:
   parse-offers:
-    java:
-      mid:
-        cron: "0 0 7 * * ?"
-        timezone: "Europe/Warsaw"
-    python:
-      mid:
-        cron: "0 0 8 * * ?"
-        timezone: "Europe/Warsaw"
+    cron: "0 0 6 * * ?"
+    timezone: "Europe/Warsaw"
+  init-parse-offers:
+    cities:
+      - warszawa
+      - krakow
+      - wroclaw
+    technologies:
+      - java
+      - php
+    seniority:
+      - mid
