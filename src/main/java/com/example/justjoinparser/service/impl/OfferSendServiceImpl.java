@@ -35,7 +35,7 @@ class OfferSendServiceImpl implements OfferSendService {
             .flatMap(offerService::save);
 
         messageBrokerPublisher.sendMessage("offers.exchange",
-            "offers."+ city.getValue() + "." + technology.getValue(),
+            "offers."+ city.getFilterValue() + "." + technology.getFilterValue(),
             offerDtoFluxToBeSent);
     }
 }

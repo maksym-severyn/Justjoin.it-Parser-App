@@ -1,6 +1,7 @@
 package com.example.justjoinparser.fto;
 
 import com.example.justjoinparser.filter.City;
+import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
@@ -10,6 +11,6 @@ import lombok.Builder;
 public record OfferParameterRequest(
         City city,
         Technology technology,
-        RequestPositionLevel seniority
+        PositionLevel seniority
 ) {
 }

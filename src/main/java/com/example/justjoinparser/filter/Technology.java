@@ -8,18 +8,19 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum Technology {
 
-    JAVA("java"),
-    ALL("all"),
-    PYTHON("python"),
-    JS("javascript"),
-    PHP("php");
+    JAVA("java", "java"),
+    ALL("all", "all"),
+    PYTHON("python", "python"),
+    JS("javascript", "java_script"),
+    PHP("php", "php");
 
+    private final String filterValue;
     @JsonValue
-    private final String value;
+    private final String valueFto;
 
-    public static Technology getFromValue(String value) {
+    public static Technology getFromValueFto(String value) {
         for (Technology technology: Technology.values()) {
-            if (technology.getValue().equals(value)) {
+            if (technology.getValueFto().equals(value)) {
                 return technology;
             }
         }

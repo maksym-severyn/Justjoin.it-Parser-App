@@ -1,12 +1,12 @@
 package com.example.justjoinparser.converter;
 
-import com.example.justjoinparser.fto.RequestPositionLevel;
+import com.example.justjoinparser.filter.PositionLevel;
 import org.springframework.core.convert.converter.Converter;
 
-public class StringToRequestPositionLevelEnumConverter implements Converter<String, RequestPositionLevel> {
+public class StringToRequestPositionLevelEnumConverter implements Converter<String, PositionLevel> {
 
     @Override
-    public RequestPositionLevel convert(String source) {
-        return RequestPositionLevel.getFromValue(source);
+    public PositionLevel convert(String source) {
+        return PositionLevel.getFromValueFto(source);
     }
 }

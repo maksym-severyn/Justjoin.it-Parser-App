@@ -8,33 +8,34 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum City {
 
-    ALL("all"),
-    WARSAW("warszawa"),
-    KRAKOW("krakow"),
-    WROCLAW("wroclaw"),
-    POZNAN("poznan"),
-    TRICITY("trojmiasto"),
-    SILESIA("slask"),
-    BIALYSTOK("bialystok"),
-    BIELSKO_BIALA("bielsko-biala"),
-    BYDGOSZCZ("bydgoszcz"),
-    CZESTOCHOWA("czestochowa"),
-    KIELCE("kielce"),
-    LUBLIN("lublin"),
-    LODZ("lodz"),
-    OLSZTYN("olsztyn"),
-    OPOLE("opole"),
-    RZESZOW("rzeszow"),
-    SZCZECIN("szczecin"),
-    TORUN("torun"),
-    ZIELONA_GORA("zielona_gora");
+    ALL("all", "all"),
+    WARSAW("warszawa", "warsaw"),
+    KRAKOW("krakow", "krakow"),
+    WROCLAW("wroclaw", "wroclaw"),
+    POZNAN("poznan", "poznan"),
+    TRICITY("trojmiasto", "tricity"),
+    SILESIA("slask", "silesia"),
+    BIALYSTOK("bialystok", "bialystok"),
+    BIELSKO_BIALA("bielsko-biala", "bielsko_biala"),
+    BYDGOSZCZ("bydgoszcz", "bydgoszcz"),
+    CZESTOCHOWA("czestochowa", "czestochowa"),
+    KIELCE("kielce", "kielce"),
+    LUBLIN("lublin", "lublin"),
+    LODZ("lodz", "lodz"),
+    OLSZTYN("olsztyn", "olsztyn"),
+    OPOLE("opole", "opole"),
+    RZESZOW("rzeszow", "rzeszow"),
+    SZCZECIN("szczecin", "szczecin"),
+    TORUN("torun", "torun"),
+    ZIELONA_GORA("zielona_gora", "zielona_gora");
 
+    private final String filterValue;
     @JsonValue
-    private final String value;
+    private final String valueFto;
 
-    public static City getFromValue(String value) {
+    public static City getFromValueFto(String value) {
         for (City city: City.values()) {
-            if (city.getValue().equals(value)) {
+            if (city.getValueFto().equals(value)) {
                 return city;
             }
         }

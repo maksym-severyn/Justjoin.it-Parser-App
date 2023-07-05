@@ -33,11 +33,11 @@ public class ParseOfferScheduler {
     @PostConstruct
     private void initTopCitiesToParseOffers() {
         scheduleProperties.getCities().forEach(city ->
-            cityParametersToParseOffers.add(City.getFromValue(city)));
+            cityParametersToParseOffers.add(City.getFromValueFto(city)));
         scheduleProperties.getSeniority().forEach(position ->
-            positionParametersToParseOffers.add(PositionLevel.getFromValue(position)));
+            positionParametersToParseOffers.add(PositionLevel.getFromValueFto(position)));
         scheduleProperties.getTechnologies().forEach(technology ->
-            technologyParametersToParseOffers.add(Technology.getFromValue(technology)));
+            technologyParametersToParseOffers.add(Technology.getFromValueFto(technology)));
     }
 
     @EventListener(ApplicationReadyEvent.class)

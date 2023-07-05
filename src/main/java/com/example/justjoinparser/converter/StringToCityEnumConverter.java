@@ -7,6 +7,6 @@ public class StringToCityEnumConverter implements Converter<String, City> {
 
     @Override
     public City convert(String source) {
-        return City.getFromValue(source);
+        return City.getFromValueFto(source);
     }
 }

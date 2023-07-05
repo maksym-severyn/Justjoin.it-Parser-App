@@ -54,7 +54,7 @@ scheduler:
     timezone: "Europe/Warsaw"
   init-parse-offers:
     cities:
-      - warszawa
+      - warsaw
       - krakow
       - wroclaw
     technologies:

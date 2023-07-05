@@ -7,6 +7,6 @@ public class StringToTechnologyEnumConverter implements Converter<String, Techno
 
     @Override
     public Technology convert(String source) {
-        return Technology.getFromValue(source);
+        return Technology.getFromValueFto(source);
     }
 }

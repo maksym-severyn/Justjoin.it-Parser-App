@@ -45,9 +45,9 @@ class JustjointLinkServiceImpl implements LinkService {
         WebDriver driver = webDriverUtil.getWebDriverNewInstance(
             String.format("%s/%s/%s/%s",
                 justjoinitDomain,
-                city.getValue(),
-                technology.getValue(),
-                positionLevel.getValue())
+                city.getFilterValue(),
+                technology.getFilterValue(),
+                positionLevel.getFilterValue())
         );
 
         var wait =
