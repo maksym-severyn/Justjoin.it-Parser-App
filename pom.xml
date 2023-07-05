@@ -20,7 +20,7 @@
         <maven-compiler-plugin.version>3.6.0</maven-compiler-plugin.version>
         <org.projectlombok.version>1.18.24</org.projectlombok.version>
         <selenium.version>4.9.1</selenium.version>
-        <embedded-mongo.version>3.4.8</embedded-mongo.version>
+        <embedded-mongo.version>4.7.0</embedded-mongo.version>
         <reactor-rabbitmq.version>1.5.6</reactor-rabbitmq.version>
         <javatuples.version>1.2</javatuples.version>
         <disruptor.version>3.4.4</disruptor.version>
@@ -127,7 +127,6 @@
                         <exclude>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
-                            <version>${org.projectlombok.version}</version>
                         </exclude>
                     </excludes>
                 </configuration>
