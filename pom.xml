@@ -25,6 +25,7 @@
         <javatuples.version>1.2</javatuples.version>
         <disruptor.version>3.4.4</disruptor.version>
         <shedlock.version>5.5.0</shedlock.version>
+        <springdoc-openapi.version>1.7.0</springdoc-openapi.version>
     </properties>
 
     <dependencies>
@@ -110,6 +111,11 @@
             <groupId>net.javacrumbs.shedlock</groupId>
             <artifactId>shedlock-provider-mongo-reactivestreams</artifactId>
             <version>${shedlock.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-webflux-ui</artifactId>
+            <version>${springdoc-openapi.version}</version>
         </dependency>
     </dependencies>
 
