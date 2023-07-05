@@ -38,15 +38,12 @@ public class CustomWebDriver {
 
     private ChromeOptions getChromeOptions() {
         ChromeOptions options = new ChromeOptions();
-//        options.addArguments("--remote-debugging-port=9222");
         options.addArguments("--ignore-certificate-errors");
         options.addArguments("--headless");
         options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--disable-extensions");
-        options.addArguments("--auto-open-devtools-for-tabs");
-        options.addArguments("start-maximized");
         options.addArguments(
             "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36"
         );
