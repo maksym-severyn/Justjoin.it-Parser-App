@@ -8,16 +8,15 @@ import com.example.justjoinparser.filter.Technology;
 import com.example.justjoinparser.model.Skill;
 import com.example.justjoinparser.repo.OfferRepository;
 import com.example.justjoinparser.service.OfferService;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +29,9 @@ class OfferServiceImpl implements OfferService {
     @Override
     public Mono<OfferDto> save(OfferDto offerDtoToSave) {
         return repository.save(converter.convertTo(offerDtoToSave))
-                .flatMap(savedOffer -> Mono.just(converter.convertFrom(savedOffer))
-                        .doOnNext(saved -> log.trace("Saved offerDto with id: {}", saved.id())));
+            .flatMap(savedOffer -> Mono.just(converter.convertFrom(savedOffer))
+                .doOnNext(saved -> log.trace("Saved offerDto with id: {}", saved.id()))
+            );
     }
 
     @Override
@@ -40,34 +40,36 @@ class OfferServiceImpl implements OfferService {
     }
 
     @Override
-    public Mono<Map<String, Long>> findSkillsByParameters(PositionLevel positionLevel, City city, Technology technology) {
+    public Mono<Map<String, Long>> findSkillsByParameters(PositionLevel positionLevel, City city,
+                                                          Technology technology) {
         return repository.findSkillsByParameters(technology, city, positionLevel)
-                .flatMap(offer -> Flux.fromIterable(offer.getSkills()))
-                .collectList()
-                .map(this::sortSkillsByHighestDemand);
+            .flatMap(offer -> Flux.fromIterable(offer.getSkills()))
+            .collectList()
+            .map(this::sortSkillsByHighestDemand);
     }
 
     @Override
-    public Mono<Map<String, Long>> findTopSkillsByParameters(Long top, PositionLevel positionLevel, City city, Technology technology) {
+    public Mono<Map<String, Long>> findTopSkillsByParameters(Long top, PositionLevel positionLevel, City city,
+                                                             Technology technology) {
         return this.findSkillsByParameters(positionLevel, city, technology)
-                .map(skillsSortedByDemand -> skillsSortedByDemand.entrySet().stream()
-                        .limit(top)
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                Map.Entry::getValue,
-                                (e1, e2) -> e1,
-                                LinkedHashMap::new)
-                        )
-                );
+            .map(skillsSortedByDemand -> skillsSortedByDemand.entrySet().stream()
+                .limit(top)
+                .collect(Collectors.toMap(
+                    Map.Entry::getKey,
+                    Map.Entry::getValue,
+                    (e1, e2) -> e1,
+                    LinkedHashMap::new)
+                )
+            );
     }
 
     private Map<String, Long> sortSkillsByHighestDemand(List<Skill> skills) {
         return skills.stream()
-                .collect(Collectors.groupingBy(
-                        Skill::getName,
-                        Collectors.counting()))
-                .entrySet().stream()
-                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            .collect(Collectors.groupingBy(
+                Skill::getName,
+                Collectors.counting()))
+            .entrySet().stream()
+            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 }

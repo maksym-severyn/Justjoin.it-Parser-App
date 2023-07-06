@@ -34,7 +34,7 @@ public enum City {
     private final String valueFto;
 
     public static City getFromValueFto(String value) {
-        for (City city: City.values()) {
+        for (City city : City.values()) {
             if (city.getValueFto().equals(value)) {
                 return city;
             }

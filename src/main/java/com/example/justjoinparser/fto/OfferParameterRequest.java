@@ -10,11 +10,11 @@ import lombok.Builder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Builder
 public record OfferParameterRequest(
-        @NotNull
-        City city,
-        @NotNull
-        Technology technology,
-        @NotNull
-        PositionLevel seniority
+    @NotNull
+    City city,
+    @NotNull
+    Technology technology,
+    @NotNull
+    PositionLevel seniority
 ) {
 }

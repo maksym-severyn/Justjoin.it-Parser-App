@@ -1,10 +1,10 @@
 package com.example.justjoinparser.service.impl;
 
-import com.example.justjoinparser.util.WebDriverUtil;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
 import com.example.justjoinparser.service.LinkService;
+import com.example.justjoinparser.util.WebDriverUtil;
 import java.time.Duration;
 import java.util.HashSet;
 import java.util.List;

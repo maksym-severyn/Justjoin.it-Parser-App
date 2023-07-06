@@ -1,15 +1,15 @@
 package com.example.justjoinparser.service.impl;
 
 import com.example.justjoinparser.SkillsDictionary;
-import com.example.justjoinparser.exception.CannotParseOffersRequest;
-import com.example.justjoinparser.util.WebDriverUtil;
 import com.example.justjoinparser.dto.OfferDto;
 import com.example.justjoinparser.dto.SkillDto;
+import com.example.justjoinparser.exception.CannotParseOffersRequest;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
 import com.example.justjoinparser.service.LinkService;
 import com.example.justjoinparser.service.PageService;
+import com.example.justjoinparser.util.WebDriverUtil;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +72,7 @@ class JustjoinitPageServiceImpl implements PageService {
                 throwable)
             )
             .doOnNext(hrefs -> log.info("Found count of offers: {} (technology: {}, city: {}, position: {})",
-                    hrefs.size(), technology, city, positionLevel))
+                hrefs.size(), technology, city, positionLevel))
             .flatMapIterable(setFlux -> setFlux)
             .flatMap(href ->
                 Mono.fromCallable(() -> parseOfferFromHref(href, positionLevel, city, technology))
@@ -92,7 +92,8 @@ class JustjoinitPageServiceImpl implements PageService {
                 TimeoutException.class,
                 (throwable, obj) -> log.info("Cannot open page!%n%s".formatted(throwable.getMessage()), throwable))
             .doOnComplete(() ->
-                    log.info("End of offers for request: {technology: {}, city: {}, position: {}})", technology, city, positionLevel));
+                log.info("End of offers for request: {technology: {}, city: {}, position: {}})", technology, city,
+                    positionLevel));
     }
 
     private OfferDto parseOfferFromHref(String href, PositionLevel positionLevel, City city, Technology technology) {
