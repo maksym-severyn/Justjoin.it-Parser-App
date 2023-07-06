@@ -18,7 +18,7 @@ public enum PositionLevel {
     private final String valueFto;
 
     public static PositionLevel getFromValueFto(String value) {
-        for (PositionLevel positionLevel: PositionLevel.values()) {
+        for (PositionLevel positionLevel : PositionLevel.values()) {
             if (positionLevel.getValueFto().equals(value)) {
                 return positionLevel;
             }

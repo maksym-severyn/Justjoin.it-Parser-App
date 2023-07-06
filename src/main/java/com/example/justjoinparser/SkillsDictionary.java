@@ -10,7 +10,8 @@ public class SkillsDictionary {
 
     public static final Map<String, List<String>> DICTIONARY = Map.ofEntries(
         Map.entry("REST", List.of("rest", "rest api", "restful api")),
-        Map.entry("Spring", List.of("spring boot", "spring boot 2+", "spring framework", "spring mvc", "spring / spring boot")),
+        Map.entry("Spring",
+            List.of("spring boot", "spring boot 2+", "spring framework", "spring mvc", "spring / spring boot")),
         Map.entry("CI/CD", List.of("ci", "ci/cd (jenkins);")),
         Map.entry("Java", List.of("java 8+", "java 8", "java 11", "java11")),
         Map.entry("WebServices", List.of("webservice", "webservices")),

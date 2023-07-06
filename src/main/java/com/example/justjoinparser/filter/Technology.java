@@ -19,7 +19,7 @@ public enum Technology {
     private final String valueFto;
 
     public static Technology getFromValueFto(String value) {
-        for (Technology technology: Technology.values()) {
+        for (Technology technology : Technology.values()) {
             if (technology.getValueFto().equals(value)) {
                 return technology;
             }
