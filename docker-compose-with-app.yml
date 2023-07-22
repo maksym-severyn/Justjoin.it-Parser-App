@@ -1,0 +1,217 @@
+version: "3.8"
+
+services:
+
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    container_name: justjoinit_app
+    environment:
+      APP_MONGODB_HOST: db-mongo
+      APP_MONGODB_PORT: "27017"
+      RABBIT_HOST: rabbitmq
+      RABBIT_PORT: "5672"
+      WEBDRIVER_SCHEME: http
+      WEBDRIVER_HOST: selenium-hub
+      WEBDRIVER_PORT: "4444"
+    depends_on:
+      db-mongo:
+        condition: service_healthy
+      selenium-hub:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "8083:8082"
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:8082/actuator/health"]
+    networks:
+      - justjoinit_parser_nw
+
+  db-mongo:
+    build:
+      context: ./docker_config/mongodb
+      dockerfile: waitForItWithMongo.Dockerfile
+    container_name: justjoinit_parser_mongo_db
+    volumes:
+      - db_mongo_data:/var/lib/mongo
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 3
+      start_period: 5s
+      test: bash -c "/wait-for-it.sh -t 0 db-mongo:27017 -- echo 'MongoDB is up!'"
+    environment:
+      MONGO_INITDB_DATABASE: local
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    networks:
+      - justjoinit_parser_nw
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: justjoinit_parser_mongo_db_express
+    restart: on-failure
+    environment:
+      ME_CONFIG_MONGODB_SERVER: db-mongo
+      ME_CONFIG_MONGODB_PORT: "27017"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin
+    ports:
+      - "8081:8081"
+    networks:
+      - justjoinit_parser_nw
+    depends_on:
+      db-mongo:
+        condition: service_healthy
+
+  chrome1:
+    image: selenium/node-chrome:4.10.0-20230607
+    container_name: chrome_container1
+    shm_size: 2gb
+    depends_on:
+      selenium-hub:
+        condition: service_started
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: 4442
+      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+      SE_NODE_MAX_SESSIONS: 6
+      SE_NODE_OVERRIDE_MAX_SESSIONS: true
+      SE_NODE_SESSION_TIMEOUT: 60
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - justjoinit_parser_nw
+    links:
+      - selenium-hub
+
+  chrome2:
+    image: selenium/node-chrome:4.10.0-20230607
+    container_name: chrome_container2
+    shm_size: 2gb
+    depends_on:
+      selenium-hub:
+        condition: service_started
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: 4442
+      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+      SE_NODE_MAX_SESSIONS: 6
+      SE_NODE_OVERRIDE_MAX_SESSIONS: true
+      SE_NODE_SESSION_TIMEOUT: 60
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - justjoinit_parser_nw
+    links:
+      - selenium-hub
+
+  chrome3:
+    image: selenium/node-chrome:4.10.0-20230607
+    container_name: chrome_container3
+    shm_size: 2gb
+    depends_on:
+      selenium-hub:
+        condition: service_started
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: 4442
+      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+      SE_NODE_MAX_SESSIONS: 6
+      SE_NODE_OVERRIDE_MAX_SESSIONS: true
+      SE_NODE_SESSION_TIMEOUT: 60
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - justjoinit_parser_nw
+    links:
+      - selenium-hub
+
+  chrome4:
+    image: selenium/node-chrome:4.10.0-20230607
+    container_name: chrome_container4
+    shm_size: 2gb
+    depends_on:
+      selenium-hub:
+        condition: service_started
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: 4442
+      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+      SE_NODE_MAX_SESSIONS: 6
+      SE_NODE_OVERRIDE_MAX_SESSIONS: true
+      SE_NODE_SESSION_TIMEOUT: 60
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - justjoinit_parser_nw
+    links:
+      - selenium-hub
+
+  chrome5:
+    image: selenium/node-chrome:4.10.0-20230607
+    container_name: chrome_container5
+    shm_size: 2gb
+    depends_on:
+      selenium-hub:
+        condition: service_started
+    environment:
+      SE_EVENT_BUS_HOST: selenium-hub
+      SE_EVENT_BUS_PUBLISH_PORT: 4442
+      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+      SE_NODE_MAX_SESSIONS: 6
+      SE_NODE_OVERRIDE_MAX_SESSIONS: true
+      SE_NODE_SESSION_TIMEOUT: 60
+    volumes:
+      - /dev/shm:/dev/shm
+    networks:
+      - justjoinit_parser_nw
+    links:
+      - selenium-hub
+
+  selenium-hub:
+    image: selenium/hub:4.10.0-20230607
+    container_name: selenium-hub
+    ports:
+      - "4444:4444"
+    networks:
+      - justjoinit_parser_nw
+
+  rabbitmq:
+    image: rabbitmq:3.12.0-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - ./docker_config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ./docker_config/rabbitmq/rabbitmq_definitions.json:/etc/rabbitmq/definitions.json
+    healthcheck:
+      interval: 10s
+      timeout: 2s
+      retries: 4
+      start_period: 5s
+      test: [ "CMD", "rabbitmqctl", "list_users" ]
+    environment:
+      - RABBITMQ_DEFAULT_USER=max_user_rabbit
+      - RABBITMQ_DEFAULT_PASS=max_password_rabbit
+      - RABBITMQ_CONFIG_FILE=/etc/rabbitmq/rabbitmq
+    networks:
+      - justjoinit_parser_nw
+
+networks:
+  justjoinit_parser_nw:
+    name: justjoinit_parser_nw
+    driver: bridge
+
+volumes:
+  db_mongo_data:
+    name: db_mongo_data

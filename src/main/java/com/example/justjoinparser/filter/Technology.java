@@ -9,7 +9,6 @@ import lombok.RequiredArgsConstructor;
 public enum Technology {
 
     JAVA("java", "java"),
-    ALL("all", "all"),
     PYTHON("python", "python"),
     JS("javascript", "java_script"),
     PHP("php", "php");

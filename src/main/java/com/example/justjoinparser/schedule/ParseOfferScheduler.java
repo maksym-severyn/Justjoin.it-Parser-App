@@ -31,7 +31,7 @@ public class ParseOfferScheduler {
     private final ScheduleProperties scheduleProperties;
 
     @PostConstruct
-    private void initTopCitiesToParseOffers() {
+    private void initParametersToParseOffers() {
         scheduleProperties.getCities().forEach(city ->
             cityParametersToParseOffers.add(City.getFromValueFto(city)));
         scheduleProperties.getSeniority().forEach(position ->
@@ -41,8 +41,8 @@ public class ParseOfferScheduler {
     }
 
     @EventListener(ApplicationReadyEvent.class)
-    @SchedulerLock(name = "initJavaMidOffersScheduler_task", lockAtMostFor = "5m", lockAtLeastFor = "5m")
-    public void initJavaMidOffersScheduler() {
+    @SchedulerLock(name = "initOffersParseAndSendScheduler_task", lockAtMostFor = "5m", lockAtLeastFor = "5m")
+    public void initOffersParseAndSendScheduler() {
         LockAssert.assertLocked();
         offerService.count()
             .doOnNext(size -> log.info("Currently there are {} offers in database", size))
@@ -58,9 +58,6 @@ public class ParseOfferScheduler {
     public void parseAndSendAllOffersScheduler() {
         LockAssert.assertLocked();
         for (Technology technology : Technology.values()) {
-            if (Technology.ALL.equals(technology)) {
-                continue;
-            }
             for (City city : City.values()) {
                 if (City.ALL.equals(city)) {
                     continue;

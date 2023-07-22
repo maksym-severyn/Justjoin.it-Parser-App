@@ -7,17 +7,17 @@ spring:
       version: 4.7.0
   data:
     mongodb:
-      host: localhost
-      port: 27017
-      database: offer
-      username: admin
-      password: admin
-      authentication-database: admin
+      host: ${APP_MONGODB_HOST:localhost}
+      port: ${APP_MONGODB_PORT:27017}
+      database: ${APP_MONGODB_DATABASE:offer}
+      username: ${APP_MONGODB_USERNAME:admin}
+      password: ${APP_MONGODB_PASSWORD:admin}
+      authentication-database: ${APP_MONGODB_AUTH_DB:admin}
   rabbitmq:
     username: ${RABBIT_USERNAME:max_user_rabbit}
     password: ${RABBIT_PASSWORD:max_password_rabbit}
     host: ${RABBIT_HOST:localhost}
-    port: ${RABBIT_HOST:5672}
+    port: ${RABBIT_PORT:5672}
 
 message-broker-custom-config:
   message:
@@ -32,7 +32,10 @@ message-broker-custom-config:
       jitter-factor: 0
 
 webdriver:
-  host: http://localhost:4444/wd/hub
+  scheme: ${WEBDRIVER_SCHEME:http}
+  host: ${WEBDRIVER_HOST:localhost}
+  port: ${WEBDRIVER_PORT:4444}
+  path: ${WEBDRIVER_PATH:/wd/hub}
 
 logging:
   level:

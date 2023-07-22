@@ -3,13 +3,13 @@ package com.example.justjoinparser.webdriver;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -17,17 +17,17 @@ import org.springframework.util.Assert;
 
 @Configuration
 @Slf4j
+@RequiredArgsConstructor
 public class CustomWebDriver {
 
-    @Value("${webdriver.host}")
-    private String driverPath;
+    private final WebdriverProperties webdriverProperties;
 
     @Bean
     @Scope("prototype")
     public WebDriver getWebDriver() {
         WebDriver driver = null;
         try {
-            driver = new RemoteWebDriver(new URL(driverPath), getChromeOptions());
+            driver = new RemoteWebDriver(new URL(webdriverProperties.getWebDriverFullPath()), getChromeOptions());
         } catch (MalformedURLException e) {
             log.error("Custom exception: cannot create ChromeDriver!", e);
         }
