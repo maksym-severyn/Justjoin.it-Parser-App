@@ -11,6 +11,7 @@ import com.example.justjoinparser.fto.TopSkillFto;
 import com.example.justjoinparser.service.OfferService;
 import com.example.justjoinparser.service.PageService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -66,11 +67,35 @@ public class JustjoinitOfferController {
         );
     }
 
+    @Operation(summary = """
+        Return top most requested skills for provided offer parameters. The offers available in the application are
+        taken into account. In the case of the NOT FOUND response, parsing of offers should be initiated with
+        the "/offer/actual" endpoint
+        """)
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Top (according to topCounter) skills successfully returned",
+            content = {
+                @Content(
+                    mediaType = "text/event-stream",
+                    array = @ArraySchema(schema = @Schema(implementation = OfferFto.class))
+                )
+            }
+        )
+    })
     @GetMapping("/skill/existing/top/{topCounter}")
-    public Mono<ResponseEntity<List<TopSkillFto>>> getExistingSkillsSkills(@PathVariable Long topCounter,
-                                                                           @RequestParam City city,
-                                                                           @RequestParam Technology technology,
-                                                                           @RequestParam PositionLevel position) {
+    public Mono<ResponseEntity<List<TopSkillFto>>> getTopMostRequestedSkillsFromExistingOffers(
+        @Parameter(description = "A counter specifying the length of the top list of skills to be returned",
+            example = "5")
+        @PathVariable Long topCounter,
+        @Parameter(description = "The city to which offers applies", example = "krakow")
+        @RequestParam City city,
+        @Parameter(description = "The technology to which offers applies", example = "php")
+        @RequestParam Technology technology,
+        @Parameter(description = "The seniority of offers", example = "junior")
+        @RequestParam PositionLevel position
+    ) {
         return offerService.findTopSkillsByParameters(topCounter, position, city, technology)
             .filter(sortedSkillsMap -> !sortedSkillsMap.isEmpty())
             .map(mapSkillToSortedListSkillConverter::convertTo)
