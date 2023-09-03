@@ -22,19 +22,9 @@ spec:
         - name: chrome-container
           image: selenium/node-chrome:4.10.0-20230607
           imagePullPolicy: IfNotPresent
-          env:
-            - name: SE_EVENT_BUS_HOST
-              value: selenium-hub-service
-            - name: SE_EVENT_BUS_PUBLISH_PORT
-              value: "4442"
-            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
-              value: "4443"
-            - name: SE_NODE_MAX_SESSIONS
-              value: "6"
-            - name: SE_NODE_OVERRIDE_MAX_SESSIONS
-              value: "true"
-            - name: SE_NODE_SESSION_TIMEOUT
-              value: "60"
+          envFrom:
+            - configMapRef:
+                name: selenium-cm
           livenessProbe:
             exec:
               command:
