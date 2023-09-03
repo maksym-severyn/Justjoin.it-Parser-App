@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: selenium-hub-pod
+  labels:
+    app: selenium-hub
+spec:
+  containers:
+    - name: selenium-hub
+      image: selenium/hub:4.10.0-20230607
+      ports:
+        - containerPort: 4444
+          name: selen-hub-gui
+        - containerPort: 4442
+          name: selen-ebp
+        - containerPort: 4443
+          name: selen-ebs
+      livenessProbe:
+        exec:
+          command:
+            - curl
+            - -s
+            - http://localhost:4444/wd/hub/status
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        timeoutSeconds: 1
+        failureThreshold: 3

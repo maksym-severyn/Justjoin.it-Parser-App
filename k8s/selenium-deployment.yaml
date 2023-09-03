@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: selenium-deployment
+spec:
+  replicas: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: selenium
+  template:
+    metadata:
+      name: selenium-pod
+      labels:
+        app: selenium
+    spec:
+      containers:
+        - name: chrome-container
+          image: selenium/node-chrome:4.10.0-20230607
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SE_EVENT_BUS_HOST
+              value: selenium-hub-service
+            - name: SE_EVENT_BUS_PUBLISH_PORT
+              value: "4442"
+            - name: SE_EVENT_BUS_SUBSCRIBE_PORT
+              value: "4443"
+            - name: SE_NODE_MAX_SESSIONS
+              value: "6"
+            - name: SE_NODE_OVERRIDE_MAX_SESSIONS
+              value: "true"
+            - name: SE_NODE_SESSION_TIMEOUT
+              value: "60"
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - -s
+                - http://localhost:5555/status
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+          volumeMounts:
+            - mountPath: /dev/shm
+              name: dshm
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2500Mi
