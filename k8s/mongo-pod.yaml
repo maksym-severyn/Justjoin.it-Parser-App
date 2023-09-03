@@ -5,6 +5,10 @@ metadata:
   labels:
     db: mongodb
 spec:
+  volumes:
+    - name: pvc
+      persistentVolumeClaim:
+        claimName: mongo-pvc
   containers:
     - name: justjoinit-parser-mongo-db
       image: localhost:32000/my-mongodb:latest
@@ -24,3 +28,6 @@ spec:
         periodSeconds: 10
         timeoutSeconds: 1
         failureThreshold: 5
+      volumeMounts:
+        - mountPath: /data/db
+          name: pvc
