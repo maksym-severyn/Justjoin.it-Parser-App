@@ -44,12 +44,12 @@ logging:
 website-to-parse:
   justjoinit:
     domain: https://justjoin.it
-    div-to-offer-list: //*[@id="root"]/div[3]/div[1]/div/div[2]/div[1]/div/div
+    div-to-offer-list: /html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[3]/div/div[2]
     offer:
       height: 68px
       end-of-offers-message-announcing: 'Subscribe to the job alert:'
     skill:
-      class-name: css-1xm32e0
+      class-name: css-1uak81x
 
 scheduler:
   parse-offers:

@@ -1,7 +1,8 @@
 package com.example.justjoinparser.webdriver;
 
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +28,8 @@ public class CustomWebDriver {
     public WebDriver getWebDriver() {
         WebDriver driver = null;
         try {
-            driver = new RemoteWebDriver(new URL(webdriverProperties.getWebDriverFullPath()), getChromeOptions());
-        } catch (MalformedURLException e) {
+            driver = new RemoteWebDriver(new URI(webdriverProperties.getWebDriverFullPath()).toURL(), getChromeOptions());
+        } catch (MalformedURLException | URISyntaxException e) {
             log.error("Custom exception: cannot create ChromeDriver!", e);
         }
         Assert.notNull(driver, "Driver cannot be null!");
@@ -39,8 +40,8 @@ public class CustomWebDriver {
     private ChromeOptions getChromeOptions() {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--ignore-certificate-errors");
-        options.addArguments("--headless");
-        options.addArguments("--disable-gpu");
+//        options.addArguments("--headless");
+//        options.addArguments("--disable-gpu");
         options.addArguments("--no-sandbox");
         options.addArguments("--disable-blink-features=AutomationControlled");
         options.addArguments("--disable-extensions");

@@ -9,9 +9,9 @@ import lombok.RequiredArgsConstructor;
 public enum PositionLevel {
 
     ALL("", "all"),
-    JUNIOR("junior", "junior"),
-    MID("mid", "mid"),
-    SENIOR("senior", "senior");
+    JUNIOR("experience-level_junior", "junior"),
+    MID("experience-level_mid", "mid"),
+    SENIOR("experience-level_senior", "senior");
 
     private final String filterValue;
     @JsonValue

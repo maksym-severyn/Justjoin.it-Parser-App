@@ -57,6 +57,7 @@ class JustjointLinkServiceImpl implements LinkService {
         Set<String> hrefSet = new HashSet<>();
 
         boolean continueLoop = true;
+        int linkCounter = 0;
         while (continueLoop) {
             List<WebElement> childDivs = parentDiv.findElements(By.xpath("./div"));
 
@@ -65,7 +66,7 @@ class JustjointLinkServiceImpl implements LinkService {
                 String height = childDiv.getCssValue("height");
 
                 if (height.equals(offerBoxHeight)) {
-                    linkElement = childDiv.findElement(By.tagName("a"));
+                    linkElement = childDiv.findElement(By.xpath("./div/div/a"));
                     String href = linkElement.getAttribute("href");
                     hrefSet.add(href);
                 } else {
@@ -86,6 +87,11 @@ class JustjointLinkServiceImpl implements LinkService {
                     }
                     break;
                 }
+            }
+            if (linkCounter == hrefSet.size()) {
+                continueLoop = false;
+            } else {
+                linkCounter = hrefSet.size();
             }
 
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", linkElement);

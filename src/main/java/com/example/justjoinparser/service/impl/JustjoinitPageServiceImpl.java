@@ -122,8 +122,8 @@ class JustjoinitPageServiceImpl implements PageService {
     private List<WebElement> waitForElements(WebDriverWait waitDriver, String href) {
         try {
             return waitDriver.until(
-                ExpectedConditions.presenceOfAllElementsLocatedBy(By.className(skillClassName))
-            );
+                ExpectedConditions.presenceOfElementLocated(By.className(skillClassName))
+            ).findElements(By.xpath("./div"));
         } catch (TimeoutException e) {
             log.info("Elements collection not available for offer: {}. Try to retry...", href);
             throw new TimeoutException();
@@ -135,8 +135,8 @@ class JustjoinitPageServiceImpl implements PageService {
 
         return elements.stream()
             .map(webElement -> SkillDto.builder()
-                .name(webElement.findElement(By.xpath("./div[2]")).getText())
-                .level(webElement.findElement(By.xpath("./div[3]")).getText())
+                .name(webElement.findElement(By.xpath("./div/h6")).getText())
+                .level(webElement.findElement(By.xpath("./div/span")).getText())
                 .build())
             .toList();
     }
