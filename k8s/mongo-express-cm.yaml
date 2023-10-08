@@ -3,7 +3,8 @@ kind: ConfigMap
 metadata:
   name: mongo-express-cm
 data:
-  ME_CONFIG_MONGODB_SERVER: "mongo-db-service"
+#  ME_CONFIG_MONGODB_SERVER: "mongo-db-service"
+  ME_CONFIG_MONGODB_SERVER: "mongo-db-sts-0.mongo-db-service-sts-headless"
   ME_CONFIG_MONGODB_PORT: "mongo-svc-port"
   ME_CONFIG_MONGODB_ADMINUSERNAME: "admin"
   ME_CONFIG_MONGODB_ADMINPASSWORD: "admin"
