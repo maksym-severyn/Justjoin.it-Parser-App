@@ -7,7 +7,7 @@ import com.example.justjoinparser.service.OfferSendService;
 import com.example.justjoinparser.service.OfferService;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.core.LockAssert;
