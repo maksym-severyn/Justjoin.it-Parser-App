@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum City {
 
-    ALL("all", "all"),
+    ALL("all-locations", "all"),
     WARSAW("warszawa", "warsaw"),
     KRAKOW("krakow", "krakow"),
     WROCLAW("wroclaw", "wroclaw"),
