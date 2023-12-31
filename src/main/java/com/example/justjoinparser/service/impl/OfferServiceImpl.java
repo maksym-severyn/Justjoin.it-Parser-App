@@ -40,8 +40,8 @@ class OfferServiceImpl implements OfferService {
         Assert.noNullElements(new Object[]{positionLevel, city, technology},
             "input parameters (positionLevel, city, technology) cannot be null");
 
-        return Flux.defer(() -> Flux.just(offerOfferCatalogParser.getOffersLinks(technology, city, positionLevel)))
-            .subscribeOn(FIVE_THREAD_EXECUTOR_SCHEDULER)
+        return Flux.just(offerOfferCatalogParser.getOffersLinks(technology, city, positionLevel))
+//            .subscribeOn(FIVE_THREAD_EXECUTOR_SCHEDULER)
             .retryWhen(
                 Retry.fixedDelay(5, Duration.ofSeconds(5))
                     .filter(ex -> ex instanceof org.openqa.selenium.NoSuchElementException ||
@@ -59,10 +59,10 @@ class OfferServiceImpl implements OfferService {
             )
             .doOnNext(hrefs -> log.info("Found count of offers: {} (technology: {}, city: {}, position: {})",
                 hrefs.size(), technology, city, positionLevel))
-            .flatMapIterable(setFlux -> setFlux)
-            .flatMap(offerLinkService::save)
-//            .flatMap(offerParserClient::parseOffer);
-            .flatMap(offerLinkDto -> Mono.just(OfferDto.builder().offerLink(offerLinkDto.link()).build()));
+            .flatMapIterable(links -> links)
+            .flatMap(link -> offerLinkService.save(link, positionLevel, city, technology))
+            .flatMap(offerParserClient::parseOffer);
+//            .flatMap(offerLinkDto -> Mono.just(OfferDto.builder().offerLink(offerLinkDto.link()).build()));
 
 //        messageBrokerPublisher.sendMessage("offers.exchange",
 //            "offers." + city.getFilterValue() + "." + technology.getFilterValue(),

@@ -11,10 +11,10 @@ import org.springframework.web.reactive.config.EnableWebFlux;
 @EnableWebFlux
 @EnableScheduling
 @EnableConfigurationProperties({WebdriverProperties.class})
-public class JustjoinparserApplication {
+public class JustJoinParserApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(JustjoinparserApplication.class, args);
+        SpringApplication.run(JustJoinParserApplication.class, args);
     }
 
 }

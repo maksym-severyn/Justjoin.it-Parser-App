@@ -1,5 +1,8 @@
 package com.example.justjoinparser.model;
 
+import com.example.justjoinparser.filter.City;
+import com.example.justjoinparser.filter.PositionLevel;
+import com.example.justjoinparser.filter.Technology;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -22,6 +25,12 @@ public class OfferLink {
     @Id
     @EqualsAndHashCode.Include
     private String link;
+
+    private PositionLevel seniority;
+
+    private City city;
+
+    private Technology technology;
 
     @CreatedDate
     private LocalDateTime createdDate;

@@ -18,7 +18,7 @@ import java.time.Duration;
 @Slf4j
 class OfferParserClientImpl extends AbstractWebClient implements OfferParserClient {
 
-    private static final String POST_OFFER_PATH = "/offer";
+    private static final String POST_OFFER_PATH = "/offer/parse";
 
     protected OfferParserClientImpl(@Value("${api.offer-parser}") final String basePath) {
         super(basePath);
@@ -36,7 +36,6 @@ class OfferParserClientImpl extends AbstractWebClient implements OfferParserClie
             .doBeforeRetry(rs -> log.info("Try to retry to parse offer: \"{}\"; attempt {}", offerLink.link(),
                 rs.totalRetries() + 1))
             .onRetryExhaustedThrow(onRetryError)
-        );
+        ).doOnNext(parsedOffer -> log.info("Offer parsed: {}", parsedOffer.id()));
     }
-
 }

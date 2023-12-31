@@ -52,4 +52,4 @@ website-to-parse:
       class-name: css-1uak81x
 
 api:
-  offer-parser: https://example.com
+  offer-parser: http://localhost:8088
