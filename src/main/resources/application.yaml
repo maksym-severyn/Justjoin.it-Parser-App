@@ -1,5 +1,5 @@
 server:
-  port: 8082
+  port: 8088
 
 spring:
   mongodb:
@@ -43,22 +43,5 @@ logging:
 
 website-to-parse:
   justjoinit:
-    domain: https://justjoin.it
-    div-to-offer-list: /html/body/div[1]/div[2]/div[2]/div/div[2]/div/div/div[3]/div/div[2]
-    offer:
-      height: 68px
-      end-of-offers-message-announcing: 'Subscribe to the job alert:'
     skill:
       class-name: css-1uak81x
-
-scheduler:
-  parse-offers:
-    cron: "0 0 6 * * ?"
-    timezone: "Europe/Warsaw"
-  init-parse-offers:
-    cities:
-      - all
-    technologies:
-      - java
-    seniority:
-      - mid

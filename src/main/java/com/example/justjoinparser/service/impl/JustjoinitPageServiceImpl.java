@@ -2,12 +2,8 @@ package com.example.justjoinparser.service.impl;
 
 import com.example.justjoinparser.SkillsDictionary;
 import com.example.justjoinparser.dto.OfferDto;
+import com.example.justjoinparser.dto.OfferLinkDto;
 import com.example.justjoinparser.dto.SkillDto;
-import com.example.justjoinparser.exception.CannotParseOffersRequest;
-import com.example.justjoinparser.filter.City;
-import com.example.justjoinparser.filter.PositionLevel;
-import com.example.justjoinparser.filter.Technology;
-import com.example.justjoinparser.service.LinkService;
 import com.example.justjoinparser.service.PageService;
 import com.example.justjoinparser.util.WebDriverUtil;
 import java.time.Duration;
@@ -26,7 +22,6 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -39,43 +34,19 @@ class JustjoinitPageServiceImpl implements PageService {
 
     private static final int CORES = Runtime.getRuntime().availableProcessors();
     private static final Scheduler DOUBLE_CORES_EXECUTOR_SCHEDULER
-        = Schedulers.fromExecutor(Executors.newFixedThreadPool(CORES * 2));
-    public static final Scheduler FIVE_THREAD_EXECUTOR_SCHEDULER
-        = Schedulers.fromExecutorService(Executors.newFixedThreadPool(5), "fiveThreadEx");
-
-    private final LinkService offerLinkService;
+        = Schedulers.fromExecutor(Executors.newFixedThreadPool(CORES / 2));
     private final WebDriverUtil webDriverUtil;
 
     @Value("${website-to-parse.justjoinit.skill.class-name}")
     private String skillClassName;
 
     @Override
-    public Flux<OfferDto> parseOffers(PositionLevel positionLevel, City city, Technology technology) {
-        Assert.noNullElements(new Object[] {positionLevel, city, technology},
-            "input parameters (positionLevel, city, technology) cannot be null");
+    public Mono<OfferDto> parseOffers(OfferLinkDto offerLinkDto) {
+        Assert.notNull(offerLinkDto, "offerLinkDto cannot be null");
 
-        return Flux.defer(() -> Flux.just(offerLinkService.getOfferLinks(technology, city, positionLevel)))
-            .subscribeOn(FIVE_THREAD_EXECUTOR_SCHEDULER)
-            .retryWhen(
-                Retry.fixedDelay(5, Duration.ofSeconds(5))
-                    .filter(ex -> ex instanceof org.openqa.selenium.NoSuchElementException ||
-                        ex instanceof org.springframework.beans.factory.BeanCreationException ||
-                        ex instanceof org.openqa.selenium.StaleElementReferenceException ||
-                        ex instanceof org.openqa.selenium.TimeoutException)
-                    .doAfterRetry(rs -> log.info("Retry to get offers for request: {}, {}, {}; attempt {}",
-                        technology, city, positionLevel, rs.totalRetries() + 1))
-                    .onRetryExhaustedThrow((spec, rs) -> rs.failure())
-            )
-            .onErrorMap(throwable -> new CannotParseOffersRequest(
-                "Cannot get links to offers with provided parameters: %s, %s, %s. The page temporarily unavailable. Try again later"
-                    .formatted(technology, city, positionLevel),
-                throwable)
-            )
-            .doOnNext(hrefs -> log.info("Found count of offers: {} (technology: {}, city: {}, position: {})",
-                hrefs.size(), technology, city, positionLevel))
-            .flatMapIterable(setFlux -> setFlux)
-            .flatMap(href ->
-                Mono.fromCallable(() -> parseOfferFromHref(href, positionLevel, city, technology))
+        return Mono.just(offerLinkDto)
+            .flatMap(offerLink ->
+                Mono.fromCallable(() -> parseOfferFromHref(offerLink))
                     .retryWhen(
                         Retry.fixedDelay(3, Duration.ofSeconds(3))
                             .doAfterRetry(rs -> log.info("Retry to extract elements from offer, attempt {}",
@@ -91,14 +62,14 @@ class JustjoinitPageServiceImpl implements PageService {
             .onErrorContinue(
                 TimeoutException.class,
                 (throwable, obj) -> log.info("Cannot open page!%n%s".formatted(throwable.getMessage()), throwable))
-            .doOnComplete(() ->
-                log.info("End of offers for request: {technology: {}, city: {}, position: {}})", technology, city,
-                    positionLevel));
+            .doOnSuccess(s ->
+                log.info("End of offers for request: {}", offerLinkDto));
     }
 
-    private OfferDto parseOfferFromHref(String href, PositionLevel positionLevel, City city, Technology technology) {
-        Assert.notNull(href, "href cannot be null");
+    private OfferDto parseOfferFromHref(OfferLinkDto offerLinkDto) {
+        Assert.notNull(offerLinkDto, "offerLinkDto cannot be null");
 
+        String href = offerLinkDto.link();
         WebDriver myDriver = webDriverUtil.getWebDriverNewInstance(href);
 
         WebDriverWait wait = new WebDriverWait(myDriver, Duration.ofSeconds(3), Duration.ofSeconds(1));
@@ -112,10 +83,10 @@ class JustjoinitPageServiceImpl implements PageService {
 
         return OfferDto.builder()
             .skills(skills)
-            .seniority(positionLevel)
-            .city(city)
+            .seniority(offerLinkDto.seniority())
+            .city(offerLinkDto.city())
             .offerLink(href)
-            .technology(technology)
+            .technology(offerLinkDto.technology())
             .build();
     }
 

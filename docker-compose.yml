@@ -54,91 +54,7 @@ services:
       SE_EVENT_BUS_HOST: selenium-hub
       SE_EVENT_BUS_PUBLISH_PORT: 4442
       SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-      SE_NODE_MAX_SESSIONS: 6
-      SE_NODE_OVERRIDE_MAX_SESSIONS: true
-      SE_NODE_SESSION_TIMEOUT: 60
-    volumes:
-      - /dev/shm:/dev/shm
-    networks:
-      - justjoinit_parser_nw
-    links:
-      - selenium-hub
-
-  chrome2:
-    image: selenium/node-chrome:4.10.0-20230607
-    container_name: chrome_container2
-    shm_size: 2gb
-    depends_on:
-      selenium-hub:
-        condition: service_started
-    environment:
-      SE_EVENT_BUS_HOST: selenium-hub
-      SE_EVENT_BUS_PUBLISH_PORT: 4442
-      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-      SE_NODE_MAX_SESSIONS: 6
-      SE_NODE_OVERRIDE_MAX_SESSIONS: true
-      SE_NODE_SESSION_TIMEOUT: 60
-    volumes:
-      - /dev/shm:/dev/shm
-    networks:
-      - justjoinit_parser_nw
-    links:
-      - selenium-hub
-
-  chrome3:
-    image: selenium/node-chrome:4.10.0-20230607
-    container_name: chrome_container3
-    shm_size: 2gb
-    depends_on:
-      selenium-hub:
-        condition: service_started
-    environment:
-      SE_EVENT_BUS_HOST: selenium-hub
-      SE_EVENT_BUS_PUBLISH_PORT: 4442
-      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-      SE_NODE_MAX_SESSIONS: 6
-      SE_NODE_OVERRIDE_MAX_SESSIONS: true
-      SE_NODE_SESSION_TIMEOUT: 60
-    volumes:
-      - /dev/shm:/dev/shm
-    networks:
-      - justjoinit_parser_nw
-    links:
-      - selenium-hub
-
-  chrome4:
-    image: selenium/node-chrome:4.10.0-20230607
-    container_name: chrome_container4
-    shm_size: 2gb
-    depends_on:
-      selenium-hub:
-        condition: service_started
-    environment:
-      SE_EVENT_BUS_HOST: selenium-hub
-      SE_EVENT_BUS_PUBLISH_PORT: 4442
-      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-      SE_NODE_MAX_SESSIONS: 6
-      SE_NODE_OVERRIDE_MAX_SESSIONS: true
-      SE_NODE_SESSION_TIMEOUT: 60
-    volumes:
-      - /dev/shm:/dev/shm
-    networks:
-      - justjoinit_parser_nw
-    links:
-      - selenium-hub
-
-  chrome5:
-    image: selenium/node-chrome:4.10.0-20230607
-    container_name: chrome_container5
-    shm_size: 2gb
-    depends_on:
-      selenium-hub:
-        condition: service_started
-    environment:
-      SE_EVENT_BUS_HOST: selenium-hub
-      SE_EVENT_BUS_PUBLISH_PORT: 4442
-      SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-      SE_NODE_MAX_SESSIONS: 6
+      SE_NODE_MAX_SESSIONS: 14
       SE_NODE_OVERRIDE_MAX_SESSIONS: true
       SE_NODE_SESSION_TIMEOUT: 60
     volumes:
@@ -152,7 +68,11 @@ services:
     image: selenium/hub:4.10.0-20230607
     container_name: selenium-hub
     ports:
+      - "4442:4442"
+      - "4443:4443"
       - "4444:4444"
+    environment:
+      SE_JAVA_OPTS: "-Xmx10240m"
     networks:
       - justjoinit_parser_nw
 

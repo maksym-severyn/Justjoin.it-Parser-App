@@ -9,12 +9,6 @@ import reactor.core.publisher.Mono;
 
 public interface OfferService {
 
-    Mono<OfferDto> save(OfferDto skill);
+    Mono<OfferDto> save(OfferDto offerDtoToSave);
 
-    Mono<Long> count();
-
-    Mono<Map<String, Long>> findTopSkillsByParameters(Long top, PositionLevel positionLevel, City city,
-                                                      Technology technology);
-
-    Mono<Map<String, Long>> findSkillsByParameters(PositionLevel positionLevel, City city, Technology technology);
 }

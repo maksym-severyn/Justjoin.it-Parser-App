@@ -7,10 +7,4 @@ import org.mapstruct.Mapper;
 
 @Mapper(uses = SkillDtoToSkillConverter.class)
 public interface OfferDtoToOfferConverter extends TwoWayConverter<OfferDto, Offer> {
-
-    @Override
-    Offer convertTo(OfferDto source);
-
-    @Override
-    OfferDto convertFrom(Offer source);
 }

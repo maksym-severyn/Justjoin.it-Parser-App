@@ -1,12 +1,10 @@
 package com.example.justjoinparser.service;
 
 import com.example.justjoinparser.dto.OfferDto;
-import com.example.justjoinparser.filter.City;
-import com.example.justjoinparser.filter.PositionLevel;
-import com.example.justjoinparser.filter.Technology;
-import reactor.core.publisher.Flux;
+import com.example.justjoinparser.dto.OfferLinkDto;
+import reactor.core.publisher.Mono;
 
 public interface PageService {
 
-    Flux<OfferDto> parseOffers(PositionLevel positionLevel, City city, Technology technology);
+    Mono<OfferDto> parseOffers(OfferLinkDto offerLinkDto);
 }
