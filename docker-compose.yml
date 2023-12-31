@@ -25,7 +25,7 @@ services:
       - justjoinit_parser_nw
 
   mongo-express:
-    image: mongo-express:latest
+    image: mongo-express:1.0.0-18
     container_name: justjoinit_parser_mongo_db_express
     restart: on-failure
     environment:
@@ -186,4 +186,3 @@ networks:
 volumes:
   db_mongo_data:
     name: db_mongo_data
-

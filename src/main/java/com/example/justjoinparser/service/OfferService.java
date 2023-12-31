@@ -4,17 +4,12 @@ import com.example.justjoinparser.dto.OfferDto;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
-import java.util.Map;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 public interface OfferService {
 
-    Mono<OfferDto> save(OfferDto skill);
-
-    Mono<Long> count();
-
-    Mono<Map<String, Long>> findTopSkillsByParameters(Long top, PositionLevel positionLevel, City city,
-                                                      Technology technology);
-
-    Mono<Map<String, Long>> findSkillsByParameters(PositionLevel positionLevel, City city, Technology technology);
+    Flux<OfferDto> parseOffers(PositionLevel positionLevel, City city, Technology technology);
 }

@@ -3,7 +3,7 @@ package com.example.justjoinparser.service.impl;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
-import com.example.justjoinparser.service.LinkService;
+import com.example.justjoinparser.service.OfferCatalogParser;
 import com.example.justjoinparser.util.WebDriverUtil;
 import java.time.Duration;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-class JustjointLinkServiceImpl implements LinkService {
+class JustJoinItCatalogParserImpl implements OfferCatalogParser {
 
     private final WebDriverUtil webDriverUtil;
 
@@ -41,7 +41,7 @@ class JustjointLinkServiceImpl implements LinkService {
     private String endOfOffersMessageAnnouncing;
 
     @Override
-    public Set<String> getOfferLinks(Technology technology, City city, PositionLevel positionLevel) {
+    public Set<String> getOffersLinks(Technology technology, City city, PositionLevel positionLevel) {
         WebDriver driver = webDriverUtil.getWebDriverNewInstance(
             String.format("%s/%s/%s/%s",
                 justjoinitDomain,
@@ -88,10 +88,9 @@ class JustjointLinkServiceImpl implements LinkService {
                 }
             }
             if (linkCounter == hrefSet.size()) {
-                continueLoop = false;
-            } else {
-                linkCounter = hrefSet.size();
+                break;
             }
+            linkCounter = hrefSet.size();
 
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", linkElement);
         }

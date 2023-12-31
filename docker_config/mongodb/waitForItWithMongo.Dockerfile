@@ -1,4 +1,4 @@
-FROM mongo:latest
+FROM mongo:7.0.4
 
 COPY wait-for-it.sh /
 

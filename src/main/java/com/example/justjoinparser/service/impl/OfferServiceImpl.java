@@ -1,75 +1,71 @@
 package com.example.justjoinparser.service.impl;
 
-import com.example.justjoinparser.converter.OfferDtoToOfferConverter;
+import com.example.justjoinparser.api.client.OfferParserClient;
 import com.example.justjoinparser.dto.OfferDto;
+import com.example.justjoinparser.exception.CannotParseOffersRequest;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
-import com.example.justjoinparser.model.Skill;
-import com.example.justjoinparser.repo.OfferRepository;
+import com.example.justjoinparser.service.OfferCatalogParser;
+import com.example.justjoinparser.service.OfferLinkService;
 import com.example.justjoinparser.service.OfferService;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.retry.Retry;
 
-@Service
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.Executors;
+
+@Component
 @RequiredArgsConstructor
 @Slf4j
 class OfferServiceImpl implements OfferService {
 
-    private final OfferDtoToOfferConverter converter;
-    private final OfferRepository repository;
+    public static final Scheduler FIVE_THREAD_EXECUTOR_SCHEDULER
+        = Schedulers.fromExecutorService(Executors.newFixedThreadPool(5), "fiveThreadEx");
+
+    private final OfferCatalogParser offerOfferCatalogParser;
+    private final OfferLinkService offerLinkService;
+    private final OfferParserClient offerParserClient;
 
     @Override
-    public Mono<OfferDto> save(OfferDto offerDtoToSave) {
-        return repository.save(converter.convertTo(offerDtoToSave))
-            .flatMap(savedOffer -> Mono.just(converter.convertFrom(savedOffer))
-                .doOnNext(saved -> log.trace("Saved offerDto with id: {}", saved.id()))
-            );
-    }
+    public Flux<OfferDto> parseOffers(PositionLevel positionLevel, City city, Technology technology) {
+        Assert.noNullElements(new Object[]{positionLevel, city, technology},
+            "input parameters (positionLevel, city, technology) cannot be null");
 
-    @Override
-    public Mono<Long> count() {
-        return repository.count();
-    }
+        return Flux.defer(() -> Flux.just(offerOfferCatalogParser.getOffersLinks(technology, city, positionLevel)))
+            .subscribeOn(FIVE_THREAD_EXECUTOR_SCHEDULER)
+            .retryWhen(
+                Retry.fixedDelay(5, Duration.ofSeconds(5))
+                    .filter(ex -> ex instanceof org.openqa.selenium.NoSuchElementException ||
+                        ex instanceof org.springframework.beans.factory.BeanCreationException ||
+                        ex instanceof org.openqa.selenium.StaleElementReferenceException ||
+                        ex instanceof org.openqa.selenium.TimeoutException)
+                    .doAfterRetry(rs -> log.info("Retry to get offers for request: {}, {}, {}; attempt {}",
+                        technology, city, positionLevel, rs.totalRetries() + 1))
+                    .onRetryExhaustedThrow((spec, rs) -> rs.failure())
+            )
+            .onErrorMap(throwable -> new CannotParseOffersRequest(
+                "Cannot get links to offers with provided parameters: %s, %s, %s. The page temporarily unavailable. Try again later"
+                    .formatted(technology, city, positionLevel),
+                throwable)
+            )
+            .doOnNext(hrefs -> log.info("Found count of offers: {} (technology: {}, city: {}, position: {})",
+                hrefs.size(), technology, city, positionLevel))
+            .flatMapIterable(setFlux -> setFlux)
+            .flatMap(offerLinkService::save)
+//            .flatMap(offerParserClient::parseOffer);
+            .flatMap(offerLinkDto -> Mono.just(OfferDto.builder().offerLink(offerLinkDto.link()).build()));
 
-    @Override
-    public Mono<Map<String, Long>> findSkillsByParameters(PositionLevel positionLevel, City city,
-                                                          Technology technology) {
-        return repository.findSkillsByParameters(technology, city, positionLevel)
-            .flatMap(offer -> Flux.fromIterable(offer.getSkills()))
-            .collectList()
-            .map(this::sortSkillsByHighestDemand);
-    }
-
-    @Override
-    public Mono<Map<String, Long>> findTopSkillsByParameters(Long top, PositionLevel positionLevel, City city,
-                                                             Technology technology) {
-        return this.findSkillsByParameters(positionLevel, city, technology)
-            .map(skillsSortedByDemand -> skillsSortedByDemand.entrySet().stream()
-                .limit(top)
-                .collect(Collectors.toMap(
-                    Map.Entry::getKey,
-                    Map.Entry::getValue,
-                    (e1, e2) -> e1,
-                    LinkedHashMap::new)
-                )
-            );
-    }
-
-    private Map<String, Long> sortSkillsByHighestDemand(List<Skill> skills) {
-        return skills.stream()
-            .collect(Collectors.groupingBy(
-                Skill::getName,
-                Collectors.counting()))
-            .entrySet().stream()
-            .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+//        messageBrokerPublisher.sendMessage("offers.exchange",
+//            "offers." + city.getFilterValue() + "." + technology.getFilterValue(),
+//            offerDtoFluxToBeSent);
     }
 }

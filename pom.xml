@@ -107,16 +107,6 @@
             <version>${disruptor.version}</version>
         </dependency>
         <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-spring</artifactId>
-            <version>${shedlock.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>net.javacrumbs.shedlock</groupId>
-            <artifactId>shedlock-provider-mongo-reactivestreams</artifactId>
-            <version>${shedlock.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-webflux-ui</artifactId>
             <version>${springdoc-openapi.version}</version>

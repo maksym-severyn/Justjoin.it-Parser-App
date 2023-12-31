@@ -51,14 +51,5 @@ website-to-parse:
     skill:
       class-name: css-1uak81x
 
-scheduler:
-  parse-offers:
-    cron: "0 0 6 * * ?"
-    timezone: "Europe/Warsaw"
-  init-parse-offers:
-    cities:
-      - all
-    technologies:
-      - java
-    seniority:
-      - mid
+api:
+  offer-parser: https://example.com

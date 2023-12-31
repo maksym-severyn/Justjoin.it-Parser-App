@@ -1,4 +1,4 @@
-FROM maven:3.8.5-openjdk-17-slim as build
+FROM maven:3.9.6-amazoncorretto-21 AS build
 
 RUN groupadd appgroup && useradd -m -g appgroup appuser
 USER appuser
@@ -18,7 +18,7 @@ ARG WEBDRIVER_PORT_ARG
 
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jre-alpine
+FROM amazoncorretto:21-alpine
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser

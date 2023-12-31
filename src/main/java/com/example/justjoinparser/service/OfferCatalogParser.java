@@ -3,8 +3,9 @@ package com.example.justjoinparser.service;
 import com.example.justjoinparser.filter.City;
 import com.example.justjoinparser.filter.PositionLevel;
 import com.example.justjoinparser.filter.Technology;
+import java.util.Set;
 
-public interface OfferSendService {
+public interface OfferCatalogParser {
 
-    void parseAndSend(PositionLevel positionLevel, City city, Technology technology);
+    Set<String> getOffersLinks(Technology technology, City city, PositionLevel positionLevel);
 }
