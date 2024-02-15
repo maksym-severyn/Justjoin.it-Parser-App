@@ -44,7 +44,7 @@ logging:
 website-to-parse:
   justjoinit:
     domain: https://justjoin.it
-    div-to-offer-list: /html/body/div[1]/div[1]/div[2]/div/div[2]/div/div/div[3]/div/div[2]
+    div-to-offer-list: /html/body/div[1]/div[2]/div[2]/div/div[2]/div/div/div[3]/div/div[2]
     offer:
       height: 68px
       end-of-offers-message-announcing: 'Subscribe to the job alert:'
@@ -57,11 +57,8 @@ scheduler:
     timezone: "Europe/Warsaw"
   init-parse-offers:
     cities:
-      - warsaw
-      - krakow
-      - wroclaw
+      - all
     technologies:
       - java
-      - php
     seniority:
       - mid

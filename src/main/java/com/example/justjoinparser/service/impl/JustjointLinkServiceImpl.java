@@ -50,8 +50,7 @@ class JustjointLinkServiceImpl implements LinkService {
                 positionLevel.getFilterValue())
         );
 
-        var wait =
-            new WebDriverWait(driver, Duration.ofSeconds(8)).pollingEvery(Duration.ofSeconds(1));
+        var wait = new WebDriverWait(driver, Duration.ofSeconds(8)).pollingEvery(Duration.ofSeconds(2));
         WebElement parentDiv = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(parentDivPath)));
 
         Set<String> hrefSet = new HashSet<>();
