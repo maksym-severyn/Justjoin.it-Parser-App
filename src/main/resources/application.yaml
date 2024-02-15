@@ -57,7 +57,7 @@ scheduler:
     timezone: "Europe/Warsaw"
   init-parse-offers:
     cities:
-      - all
+      - wroclaw
     technologies:
       - java
     seniority:

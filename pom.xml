@@ -25,7 +25,7 @@
         <javatuples.version>1.2</javatuples.version>
         <disruptor.version>3.4.4</disruptor.version>
         <shedlock.version>5.5.0</shedlock.version>
-        <springdoc-openapi.version>1.7.0</springdoc-openapi.version>
+        <springdoc-openapi.version>2.3.0</springdoc-openapi.version>
     </properties>
 
     <dependencies>
@@ -118,7 +118,7 @@
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-webflux-ui</artifactId>
+            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
             <version>${springdoc-openapi.version}</version>
         </dependency>
     </dependencies>

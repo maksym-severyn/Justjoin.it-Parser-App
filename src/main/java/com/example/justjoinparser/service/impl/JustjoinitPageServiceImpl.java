@@ -37,9 +37,8 @@ import reactor.util.retry.Retry;
 @RequiredArgsConstructor
 class JustjoinitPageServiceImpl implements PageService {
 
-    private static final int CORES = Runtime.getRuntime().availableProcessors();
-    private static final Scheduler DOUBLE_CORES_EXECUTOR_SCHEDULER
-        = Schedulers.fromExecutor(Executors.newFixedThreadPool(CORES * 2));
+    private static final Scheduler VIRTUAL_THREAD_POOL_EXECUTOR_SCHEDULER
+        = Schedulers.fromExecutor(Executors.newVirtualThreadPerTaskExecutor());
     public static final Scheduler FIVE_THREAD_EXECUTOR_SCHEDULER
         = Schedulers.fromExecutorService(Executors.newFixedThreadPool(5), "fiveThreadEx");
 
@@ -86,7 +85,7 @@ class JustjoinitPageServiceImpl implements PageService {
                         TimeoutException.class,
                         (throwable, obj) -> log.info("Cannot extract elements collection"))
                     .map(this::renameSkillsIfNeed)
-                    .subscribeOn(DOUBLE_CORES_EXECUTOR_SCHEDULER)
+                    .subscribeOn(VIRTUAL_THREAD_POOL_EXECUTOR_SCHEDULER)
             )
             .onErrorContinue(
                 TimeoutException.class,
